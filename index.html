@@ -3,58 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D&D Карточки · Гнилой оброк</title>
+    <title>D&D Карточки · Конструктор игр</title>
+
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js">
+    </script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app" id="app">
-        <div class="toolbar">
-            <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <h1>⚔️ Гнилой оброк</h1>
-                <span class="game-info" id="gameInfo">🏔️ <strong>Сеттинг:</strong> Древняя Русь</span>
-            </div>
-            <div class="actions">
-                <button class="btn btn-primary" id="exportBtn">💾 Экспорт JSON</button>
-                <button class="btn btn-outline" id="importBtn">📂 Импорт JSON</button>
-                <button class="btn" id="printBtn">🖨️ Печать</button>
-            </div>
-        </div>
 
-        <div class="json-input-area" id="jsonInputArea">
-            <textarea id="jsonTextarea" placeholder="Вставьте JSON данные игры..."></textarea>
-            <div class="btn-row">
-                <button class="btn btn-success" id="applyJsonBtn">✅ Применить</button>
-                <button class="btn btn-outline" id="cancelJsonBtn">❌ Отмена</button>
-                <div class="file-input-wrapper">
-                    <button class="btn btn-outline">📁 Загрузить файл</button>
-                    <input type="file" id="fileInput" accept=".json">
+        <!-- ======== ТУЛБАР ======== -->
+        <div class="toolbar" id="toolbar">
+            <div class="toolbar-left">
+                <h1>⚔️ D&D Конструктор</h1>
+                <span class="game-info" id="gameInfo">Загрузка...</span>
+            </div>
+            <div class="toolbar-right">
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-primary" id="showLoginBtn">🔑 Войти</button>
+                    <button class="btn btn-outline" id="showRegisterBtn">📝 Регистрация</button>
+                </div>
+                <div class="user-menu" id="userMenu" style="display:none;">
+                    <span class="user-email" id="userEmail"></span>
+                    <button class="btn btn-outline" id="myGamesBtn">🎮 Мои игры</button>
+                    <button class="btn btn-outline" id="infoBtn">❓</button>
+                    <button class="btn btn-small" id="logoutBtn">Выйти</button>
                 </div>
             </div>
         </div>
 
-        <div class="filter-bar" id="filterBar">
-            <button class="filter-btn active" data-filter="all">📋 Все</button>
-            <button class="filter-btn" data-filter="player">🧙 Игроки</button>
-            <button class="filter-btn" data-filter="friendly">🤝 Друзья</button>
-            <button class="filter-btn" data-filter="enemy">👹 Враги</button>
-            <button class="filter-btn" data-filter="weapon">⚔️ Оружие</button>
-            <button class="filter-btn" data-filter="armor">🛡️ Броня</button>
-            <button class="filter-btn" data-filter="artifact">🔮 Артефакты</button>
-            <button class="filter-btn" data-filter="tool">🔧 Инструменты</button>
-            <button class="filter-btn" data-filter="consumable">🧪 Расходники</button>
-            <button class="filter-btn" data-filter="skill">🎯 Навыки</button>
-            <button class="filter-btn" data-filter="location">🗺️ Локации</button>
-            <button class="filter-btn" data-filter="story">📖 Сюжет</button>
-            <button class="filter-btn" data-filter="reward">🏆 Награды</button>
+        <!-- ======== СЕКЦИЯ: АВТОРИЗАЦИЯ ======== -->
+        <div class="section" id="authSection" style="display:none;">
+            <div class="auth-container">
+                <div class="auth-form" id="loginForm">
+                    <h2>🔑 Вход</h2>
+                    <input type="email" id="loginEmail" placeholder="Email" class="input">
+                    <input type="password" id="loginPassword" placeholder="Пароль" class="input">
+                    <button class="btn btn-primary" id="loginBtn">Войти</button>
+                    <p class="auth-switch">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
+                    <p class="auth-error" id="authError"></p>
+                </div>
+                <div class="auth-form" id="registerForm" style="display:none;">
+                    <h2>📝 Регистрация</h2>
+                    <input type="email" id="registerEmail" placeholder="Email" class="input">
+                    <input type="password" id="registerPassword" placeholder="Пароль (мин. 6 символов)" class="input">
+                    <input type="password" id="registerConfirm" placeholder="Повторите пароль" class="input">
+                    <button class="btn btn-primary" id="registerBtn">Зарегистрироваться</button>
+                    <p class="auth-switch">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
+                    <p class="auth-error" id="regError"></p>
+                </div>
+            </div>
         </div>
 
-        <div id="cardContainer" class="card-grid">
-            <!-- карточки рендерятся здесь -->
+        <!-- ======== СЕКЦИЯ: МОИ ИГРЫ ======== -->
+        <div class="section" id="gamesSection" style="display:none;">
+            <div class="section-header">
+                <h2>🎮 Мои игры</h2>
+                <button class="btn btn-primary" id="createGameBtn">➕ Новая игра</button>
+            </div>
+            <div class="games-grid" id="gamesGrid">
+                <!-- карточки игр -->
+            </div>
         </div>
 
+        <!-- ======== СЕКЦИЯ: ИГРА (карточки) ======== -->
+        <div class="section" id="gameSection" style="display:none;">
+            <div class="game-toolbar">
+                <button class="btn btn-outline" id="backToGamesBtn">← Назад к играм</button>
+                <span class="game-title" id="gameTitle">Загрузка...</span>
+                <div class="game-actions">
+                    <button class="btn btn-primary" id="addCardBtn">➕ Добавить карточку</button>
+                    <button class="btn btn-outline" id="exportGameBtn">💾 Экспорт</button>
+                    <button class="btn" id="printGameBtn">🖨️ Печать</button>
+                </div>
+            </div>
+
+            <div class="filter-bar" id="filterBar">
+                <button class="filter-btn active" data-filter="all">📋 Все</button>
+                <button class="filter-btn" data-filter="player">🧙 Игроки</button>
+                <button class="filter-btn" data-filter="friendly">🤝 Друзья</button>
+                <button class="filter-btn" data-filter="enemy">👹 Враги</button>
+                <button class="filter-btn" data-filter="weapon">⚔️ Оружие</button>
+                <button class="filter-btn" data-filter="armor">🛡️ Броня</button>
+                <button class="filter-btn" data-filter="artifact">🔮 Артефакты</button>
+                <button class="filter-btn" data-filter="tool">🔧 Инструменты</button>
+                <button class="filter-btn" data-filter="consumable">🧪 Расходники</button>
+                <button class="filter-btn" data-filter="skill">🎯 Навыки</button>
+                <button class="filter-btn" data-filter="location">🗺️ Локации</button>
+                <button class="filter-btn" data-filter="story">📖 Сюжет</button>
+                <button class="filter-btn" data-filter="reward">🏆 Награды</button>
+            </div>
+
+            <div class="game-layout">
+                <div class="game-sidebar" id="gameSidebar">
+                    <div class="sidebar-section">
+                        <h3>📋 Игра</h3>
+                        <p id="sidebarGameName"></p>
+                        <p id="sidebarGameSetting"></p>
+                        <p id="sidebarGameDesc"></p>
+                    </div>
+                    <div class="sidebar-section" id="commonCardsSection">
+                        <h3>🏷️ Общие карточки</h3>
+                        <div id="commonCardsList"></div>
+                    </div>
+                    <div class="sidebar-section">
+                        <h3>📊 Статистика</h3>
+                        <div id="gameStats"></div>
+                    </div>
+                </div>
+                <div id="cardContainer" class="card-grid">
+                    <!-- карточки рендерятся здесь -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== СЕКЦИЯ: ИНФОРМАЦИЯ ======== -->
+        <div class="section" id="infoSection" style="display:none;">
+            <div class="section-header">
+                <h2>❓ О проекте</h2>
+                <button class="btn btn-outline" id="backFromInfoBtn">← Назад</button>
+            </div>
+
+            <div class="info-content">
+                <div class="info-block-card">
+                    <h3>🤖 Как генерируются карточки</h3>
+                    <p>Карточки создаются вручную через интерфейс или загружаются в формате JSON. Каждая карточка относится к определённому типу (персонаж, враг, оружие, локация и т.д.) и содержит набор полей, специфичных для этого типа.</p>
+                    <p><strong>Генерация AI:</strong> В будущем карточки смогут генерироваться с помощью AI на основе вашего описания. Пока что все карточки создаются вручную.</p>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>🏷️ Общие карточки</h3>
+                    <p>Карточки с меткой <strong>"общее"</strong> доступны во всех играх всем пользователям. Это удобно для универсальных предметов, навыков или NPC, которые можно переиспользовать.</p>
+                    <p>Чтобы сделать карточку общей, отметьте флаг "Общее" при создании или редактировании.</p>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>📄 Шаблон JSON для ручной загрузки</h3>
+                    <p>Вы можете загрузить карточки через JSON. Ниже пример формата для каждой карточки:</p>
+                    <pre><code>{
+  "cards": [
+    {
+      "type": "player",
+      "data": {
+        "name": "Микула",
+        "profession": "Богатырь",
+        "description": "Широкоплечий детина",
+        "stats": {
+          "strength": 5,
+          "agility": 2,
+          "endurance": 4,
+          "intelligence": 1,
+          "wisdom": 2,
+          "charisma": 1
+        },
+        "health": { "max": 12, "current": 12 },
+        "armor": { "type": "Кольчуга", "ac": 16 }
+      }
+    },
+    {
+      "type": "enemy",
+      "data": {
+        "name": "Леший",
+        "health": 30,
+        "description": "Дух леса",
+        "stats": { "strength": 4, "agility": 3 },
+        "armor": { "ac": 12 }
+      }
+    },
+    {
+      "type": "weapon",
+      "data": {
+        "name": "Булава",
+        "description": "Тяжёлая булава",
+        "damage": "1d8+2",
+        "weight": "3 кг"
+      }
+    },
+    {
+      "type": "location",
+      "data": {
+        "name": "Тёмный лес",
+        "description": "Дремучий лес, полный тайн"
+      }
+    }
+  ]
+}</code></pre>
+                    <p>Поддерживаемые типы: <code>player, friendly, enemy, weapon, armor, artifact, tool, consumable, skill, location, story, reward</code>.</p>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>⚙️ Как это работает</h3>
+                    <p>Приложение использует <strong>Firebase Firestore</strong> для хранения данных и <strong>Firebase Authentication</strong> для входа.</p>
+                    <ul>
+                        <li>После регистрации вы создаёте игры</li>
+                        <li>В каждой игре можно создавать карточки разных типов</li>
+                        <li>Карточки можно редактировать, удалять, экспортировать</li>
+                        <li>Карточки с меткой "общее" видны всем пользователям</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: СОЗДАНИЕ/РЕДАКТИРОВАНИЕ КАРТОЧКИ ======== -->
+        <div class="modal-overlay" id="cardModal" style="display:none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Создание карточки</h2>
+                    <button class="btn btn-small modal-close" id="modalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Тип карточки</label>
+                        <select id="cardTypeSelect" class="input">
+                            <option value="player">🧙 Игрок</option>
+                            <option value="friendly">🤝 Друг (NPC)</option>
+                            <option value="enemy">👹 Враг</option>
+                            <option value="weapon">⚔️ Оружие</option>
+                            <option value="armor">🛡️ Броня</option>
+                            <option value="artifact">🔮 Артефакт</option>
+                            <option value="tool">🔧 Инструмент</option>
+                            <option value="consumable">🧪 Расходник</option>
+                            <option value="skill">🎯 Навык</option>
+                            <option value="location">🗺️ Локация</option>
+                            <option value="story">📖 Сюжет</option>
+                            <option value="reward">🏆 Награда</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Название</label>
+                        <input type="text" id="cardName" class="input" placeholder="Название карточки">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="cardDescription" class="input" placeholder="Описание..." rows="3"></textarea>
+                    </div>
+                    <div class="form-group" id="cardExtraFields">
+                        <!-- дополнительные поля в зависимости от типа -->
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cardIsCommon">
+                            <span>🏷️ Общее (доступно всем пользователям во всех играх)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="modalCancelBtn">Отмена</button>
+                    <button class="btn btn-primary" id="modalSaveBtn">💾 Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: СОЗДАНИЕ ИГРЫ ======== -->
+        <div class="modal-overlay" id="gameModal" style="display:none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>🎮 Новая игра</h2>
+                    <button class="btn btn-small modal-close" id="gameModalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Название игры</label>
+                        <input type="text" id="gameNameInput" class="input" placeholder="Название кампании">
+                    </div>
+                    <div class="form-group">
+                        <label>Сеттинг</label>
+                        <input type="text" id="gameSettingInput" class="input" placeholder="Например: Древняя Русь, Forgotten Realms...">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="gameDescInput" class="input" placeholder="Краткое описание..." rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="gameModalCancelBtn">Отмена</button>
+                    <button class="btn btn-primary" id="gameModalSaveBtn">💾 Создать игру</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== TOAST ======== -->
         <div class="toast" id="toast"></div>
     </div>
 
+    <script src="firebase-config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
