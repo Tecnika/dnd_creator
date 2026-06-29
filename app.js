@@ -1332,6 +1332,20 @@
         }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
     });
 
+    $('clearGameBtn').addEventListener('click', () => {
+        if (!currentGame) { showToast('❌ Нет активной игры', true); return; }
+        if (!confirm(`🗑️ Удалить ВСЕ карточки игры "${currentGame.name}"? Это нельзя отменить.`)) return;
+        if (!confirm('Вы уверены? Карточки будут безвозвратно удалены.')) return;
+        db.collection('cards').where('gameId', '==', currentGame.id).get().then(snap => {
+            if (snap.empty) { showToast('📭 Игра уже пуста'); return; }
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            return batch.commit();
+        }).then(() => {
+            showToast('🗑️ Все карточки удалены');
+        }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
+    });
+
     // ==============================
     // 15. STORY TREE
     // ==============================
