@@ -809,11 +809,16 @@
         $('cardModal').style.display = 'flex';
     }
 
-    $('addCardBtn').addEventListener('click', () => openCardModal(null));
+    let _pendingTreeCard = null;
+
+    $('addCardBtn').addEventListener('click', () => { _pendingTreeCard = null;
+        openCardModal(null); });
     $('modalCloseBtn').addEventListener('click', () => { $('cardModal').style.display = 'none';
-        $('cardTypeSelect').disabled = false; });
+        $('cardTypeSelect').disabled = false;
+        _pendingTreeCard = null; });
     $('modalCancelBtn').addEventListener('click', () => { $('cardModal').style.display = 'none';
-        $('cardTypeSelect').disabled = false; });
+        $('cardTypeSelect').disabled = false;
+        _pendingTreeCard = null; });
 
     $('cardTypeSelect').addEventListener('change', function() {
         renderCardExtraFields(this.value, null);
@@ -1213,8 +1218,20 @@
             if (!currentGame) { showToast('❌ Нет активной игры', true); return; }
             cardData.gameId = currentGame.id;
             cardData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            db.collection('cards').add(cardData).then(() => {
+            db.collection('cards').add(cardData).then(ref => {
                 $('cardModal').style.display = 'none';
+                $('cardTypeSelect').disabled = false;
+                // If called from tree editor, auto-assign to node
+                if (_pendingTreeCard && selectedNodeId) {
+                    const node = treeNodes.find(n => n.id === selectedNodeId);
+                    if (node) {
+                        if (!node.cards) node.cards = [];
+                        node.cards.push(ref.id);
+                        saveTree();
+                        selectTreeNode(selectedNodeId);
+                    }
+                }
+                _pendingTreeCard = null;
                 showToast('✅ Карточка создана');
             }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
         }
@@ -1617,6 +1634,21 @@
         });
         $('treeCardSelectModal').style.display = 'flex';
     });
+    // ---- Create new card from tree ----
+    $('treeCreateCardBtn').addEventListener('click', () => {
+        if (!selectedNodeId) return;
+        _pendingTreeCard = true;
+        $('cardTypeSelect').value = 'player';
+        $('cardTypeSelect').disabled = false;
+        $('cardName').value = '';
+        $('cardDescription').value = '';
+        $('cardIsCommon').checked = false;
+        renderCardExtraFields('player', null);
+        $('modalTitle').textContent = '✨ Новая карточка (для узла древа)';
+        editingCardId = null;
+        $('cardModal').style.display = 'flex';
+    });
+
     $('treeCardSelectCloseBtn').addEventListener('click', () => $('treeCardSelectModal').style.display = 'none');
     $('treeCardSelectCancelBtn').addEventListener('click', () => $('treeCardSelectModal').style.display = 'none');
 

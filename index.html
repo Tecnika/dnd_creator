@@ -370,7 +370,10 @@
                         <div class="form-group">
                             <label>Привязанные карточки</label>
                             <div id="treeNodeCards" class="tree-node-cards"></div>
-                            <button class="btn btn-small btn-outline" id="treeAddCardBtn">➕ Добавить карточку</button>
+                            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+                                <button class="btn btn-small btn-outline" id="treeAddCardBtn">➕ Из existing</button>
+                                <button class="btn btn-small btn-primary" id="treeCreateCardBtn">✨ Создать новую</button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Связи (выходящие)</label>
