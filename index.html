@@ -81,6 +81,7 @@
                     <button class="btn btn-primary" id="addCardBtn">➕ Добавить карточку</button>
                     <button class="btn btn-outline" id="storyTreeBtn">🌳 Сюжетное древо</button>
                     <button class="btn btn-outline" id="exportGameBtn">💾 Экспорт</button>
+                    <button class="btn btn-outline" id="importGameBtn">📂 Импорт</button>
                     <button class="btn" id="printGameBtn">🖨️ Печать</button>
                 </div>
             </div>
@@ -454,6 +455,33 @@
                         <li>Карточки можно редактировать, удалять, экспортировать</li>
                         <li>Карточки с меткой "общее" видны всем пользователям</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: ИМПОРТ ИГРЫ ======== -->
+        <div class="modal-overlay" id="importModal" style="display:none;">
+            <div class="modal" style="max-width:650px;">
+                <div class="modal-header">
+                    <h2>📂 Импорт в игру</h2>
+                    <button class="btn btn-small modal-close" id="importModalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Вставьте JSON (формат экспорта игры или массив cards)</label>
+                        <textarea id="importTextarea" class="input" rows="8" placeholder='{"cards": [{"type":"player","data":{...}}]}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <div class="file-input-wrapper">
+                            <button class="btn btn-outline">📁 Загрузить файл .json</button>
+                            <input type="file" id="importFileInput" accept=".json">
+                        </div>
+                    </div>
+                    <p class="import-hint">💡 Поддерживается формат экспорта игры <code>{"game":{...},"rulesMode":"...","cards":[...]}</code> или просто <code>{"cards":[...]}</code>. Карточки добавятся к текущей игре.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="importCancelBtn">Отмена</button>
+                    <button class="btn btn-primary" id="importApplyBtn">📂 Импортировать</button>
                 </div>
             </div>
         </div>

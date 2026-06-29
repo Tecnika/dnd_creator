@@ -1272,7 +1272,68 @@
     $('printGameBtn').addEventListener('click', () => window.print());
 
     // ==============================
-    // 14. STORY TREE
+    // 14. IMPORT GAME
+    // ==============================
+    $('importGameBtn').addEventListener('click', () => {
+        if (!currentGame) { showToast('❌ Нет активной игры', true); return; }
+        $('importTextarea').value = '';
+        $('importModal').style.display = 'flex';
+    });
+    $('importModalCloseBtn').addEventListener('click', () => $('importModal').style.display = 'none');
+    $('importCancelBtn').addEventListener('click', () => $('importModal').style.display = 'none');
+
+    $('importFileInput').addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) { $('importTextarea').value = ev.target.result; };
+        reader.readAsText(file);
+    });
+
+    $('importApplyBtn').addEventListener('click', () => {
+        if (!currentGame || !currentUser) return;
+        const text = $('importTextarea').value.trim();
+        if (!text) { showToast('❌ Вставьте JSON', true); return; }
+        let parsed;
+        try { parsed = JSON.parse(text); } catch (e) { showToast('❌ Ошибка парсинга JSON: ' + e.message, true); return; }
+
+        let cardsToImport = [];
+        if (Array.isArray(parsed.cards)) {
+            cardsToImport = parsed.cards;
+        } else if (Array.isArray(parsed)) {
+            cardsToImport = parsed;
+        } else {
+            showToast('❌ Не найден массив cards', true);
+            return;
+        }
+        if (!cardsToImport.length) { showToast('❌ Нет карточек для импорта', true); return; }
+
+        const batch = db.batch();
+        let count = 0;
+        cardsToImport.forEach(c => {
+            if (!c.type || !c.data) return;
+            const ref = db.collection('cards').doc();
+            batch.set(ref, {
+                type: c.type,
+                name: c.data.name || c.name || 'Без названия',
+                data: c.data,
+                isCommon: c.isCommon || false,
+                gameId: currentGame.id,
+                ownerId: currentUser.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            count++;
+        });
+        if (!count) { showToast('❌ Нет валидных карточек', true); return; }
+        batch.commit().then(() => {
+            $('importModal').style.display = 'none';
+            showToast(`✅ Импортировано ${count} карточек`);
+            document.getElementById('importFileInput').value = '';
+        }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
+    });
+
+    // ==============================
+    // 15. STORY TREE
     // ==============================
     let treeNodes = [];
     let treeEdges = [];

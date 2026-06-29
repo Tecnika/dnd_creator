@@ -1506,6 +1506,20 @@ select.input {
     color: #b0bed0;
 }
 
+.import-hint {
+    font-size: 0.8rem;
+    color: #8899aa;
+    line-height: 1.4;
+    margin-top: 0.5rem;
+}
+.import-hint code {
+    background: #1a2128;
+    padding: 0.05rem 0.3rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #f5c27b;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .tree-body {
