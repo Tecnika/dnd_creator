@@ -247,16 +247,22 @@
         $('gamesGrid').innerHTML = '<div class="loading">Загрузка игр...</div>';
         db.collection('games')
             .where('ownerId', '==', currentUser.uid)
-            .orderBy('createdAt', 'desc')
             .onSnapshot(snapshot => {
                 allGames = [];
                 snapshot.forEach(doc => {
-                    allGames.push({ id: doc.id, ...doc.data() });
+                    const g = { id: doc.id, ...doc.data() };
+                    g._created = g.createdAt?.toMillis?.() || 0;
+                    allGames.push(g);
                 });
+                allGames.sort((a, b) => b._created - a._created);
                 renderGamesGrid();
             }, err => {
-                showToast('❌ Ошибка загрузки игр: ' + err.message, true);
-                $('gamesGrid').innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+                let msg = err.message;
+                if (err.code === 'failed-precondition' && msg.includes('index')) {
+                    msg = 'Требуется создать индекс в Firebase Console. Нажмите на ссылку в консоли браузера (F12).';
+                }
+                showToast('❌ Ошибка загрузки игр: ' + msg, true);
+                $('gamesGrid').innerHTML = '<div class="empty-state">Ошибка загрузки. Проверьте консоль (F12).</div>';
             });
     }
 
