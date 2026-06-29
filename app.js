@@ -1297,38 +1297,79 @@
         let parsed;
         try { parsed = JSON.parse(text); } catch (e) { showToast('❌ Ошибка парсинга JSON: ' + e.message, true); return; }
 
+        // Check for story tree and game data
+        const gameUpdate = {};
+        if (parsed.storyTree) {
+            gameUpdate.storyTree = parsed.storyTree;
+        }
+        if (parsed.rulesMode) {
+            gameUpdate.rulesMode = parsed.rulesMode;
+        }
+        if (parsed.game) {
+            if (parsed.game.name) gameUpdate.name = parsed.game.name;
+            if (parsed.game.setting) gameUpdate.setting = parsed.game.setting;
+            if (parsed.game.description) gameUpdate.description = parsed.game.description;
+            if (parsed.game.rulesMode) gameUpdate.rulesMode = parsed.game.rulesMode;
+            if (parsed.game.storyTree) gameUpdate.storyTree = parsed.game.storyTree;
+        }
+
         let cardsToImport = [];
         if (Array.isArray(parsed.cards)) {
             cardsToImport = parsed.cards;
         } else if (Array.isArray(parsed)) {
             cardsToImport = parsed;
-        } else {
-            showToast('❌ Не найден массив cards', true);
+        } else if (!Object.keys(gameUpdate).length) {
+            showToast('❌ Не найден массив cards или storyTree', true);
             return;
         }
-        if (!cardsToImport.length) { showToast('❌ Нет карточек для импорта', true); return; }
 
-        const batch = db.batch();
-        let count = 0;
-        cardsToImport.forEach(c => {
-            if (!c.type || !c.data) return;
-            const ref = db.collection('cards').doc();
-            batch.set(ref, {
-                type: c.type,
-                name: c.data.name || c.name || 'Без названия',
-                data: c.data,
-                isCommon: c.isCommon || false,
-                gameId: currentGame.id,
-                ownerId: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        const promises = [];
+
+        // Update game document if needed
+        if (Object.keys(gameUpdate).length) {
+            promises.push(db.collection('games').doc(currentGame.id).update(gameUpdate));
+        }
+
+        // Import cards
+        if (cardsToImport.length) {
+            const batch = db.batch();
+            let count = 0;
+            cardsToImport.forEach(c => {
+                if (!c.type || !c.data) return;
+                const ref = db.collection('cards').doc();
+                batch.set(ref, {
+                    type: c.type,
+                    name: c.data.name || c.name || 'Без названия',
+                    data: c.data,
+                    isCommon: c.isCommon || false,
+                    gameId: currentGame.id,
+                    ownerId: currentUser.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                count++;
             });
-            count++;
-        });
-        if (!count) { showToast('❌ Нет валидных карточек', true); return; }
-        batch.commit().then(() => {
+            if (count) promises.push(batch.commit().then(() => count));
+        }
+
+        if (!promises.length) { showToast('❌ Нет данных для импорта', true); return; }
+
+        Promise.all(promises).then(results => {
             $('importModal').style.display = 'none';
-            showToast(`✅ Импортировано ${count} карточек`);
             document.getElementById('importFileInput').value = '';
+            // Reload game to get storyTree
+            if (gameUpdate.storyTree || gameUpdate.name) {
+                db.collection('games').doc(currentGame.id).get().then(doc => {
+                    if (doc.exists) {
+                        currentGame = { id: doc.id, ...doc.data() };
+                        renderGameView();
+                    }
+                });
+            }
+            const cardCount = results.find(r => typeof r === 'number') || 0;
+            const parts = [];
+            if (gameUpdate.storyTree) parts.push('древо');
+            if (cardCount) parts.push(`${cardCount} карточек`);
+            showToast(`✅ Импортировано: ${parts.join(', ')}`);
         }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
     });
 
