@@ -79,6 +79,7 @@
                 <span class="game-title" id="gameTitle">Загрузка...</span>
                 <div class="game-actions">
                     <button class="btn btn-primary" id="addCardBtn">➕ Добавить карточку</button>
+                    <button class="btn btn-outline" id="storyTreeBtn">🌳 Сюжетное древо</button>
                     <button class="btn btn-outline" id="exportGameBtn">💾 Экспорт</button>
                     <button class="btn" id="printGameBtn">🖨️ Печать</button>
                 </div>
@@ -329,6 +330,90 @@
                         <li>Карточки можно редактировать, удалять, экспортировать</li>
                         <li>Карточки с меткой "общее" видны всем пользователям</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: СЮЖЕТНОЕ ДРЕВО ======== -->
+        <div class="modal-overlay" id="treeModal" style="display:none;">
+            <div class="modal modal-tree">
+                <div class="modal-header">
+                    <h2>🌳 Сюжетное древо</h2>
+                    <div class="tree-header-actions">
+                        <button class="btn btn-small btn-outline" id="treeAddNodeBtn">➕ Узел</button>
+                        <button class="btn btn-small btn-outline" id="treeAutoBtn">✨ Авторасстановка</button>
+                        <button class="btn btn-small modal-close" id="treeModalCloseBtn">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body tree-body">
+                    <div class="tree-canvas-wrapper" id="treeCanvasWrapper">
+                        <svg id="treeSvg" class="tree-svg" width="100%" height="500"></svg>
+                        <div class="tree-tooltip" id="treeTooltip" style="display:none;"></div>
+                    </div>
+                    <div class="tree-node-editor" id="treeNodeEditor" style="display:none;">
+                        <div class="tree-editor-header">
+                            <span id="treeEditorTitle">Редактор узла</span>
+                            <button class="btn btn-small" id="treeEditorDeleteBtn">🗑️</button>
+                        </div>
+                        <div class="form-group"><label>Название</label><input type="text" id="treeNodeTitle" class="input"></div>
+                        <div class="form-group"><label>Описание</label><textarea id="treeNodeDesc" class="input" rows="2"></textarea></div>
+                        <div class="form-group"><label>Тип</label>
+                            <select id="treeNodeType" class="input">
+                                <option value="default">📌 Обычный</option>
+                                <option value="start">🏁 Старт</option>
+                                <option value="encounter">⚔️ Сражение</option>
+                                <option value="decision">❓ Выбор</option>
+                                <option value="loot">🎁 Награда</option>
+                                <option value="ending">🏆 Концовка</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Привязанные карточки</label>
+                            <div id="treeNodeCards" class="tree-node-cards"></div>
+                            <button class="btn btn-small btn-outline" id="treeAddCardBtn">➕ Добавить карточку</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Связи (выходящие)</label>
+                            <div id="treeNodeEdges" class="tree-node-edges"></div>
+                            <button class="btn btn-small btn-outline" id="treeAddEdgeBtn">➕ Связать с...</button>
+                        </div>
+                        <button class="btn btn-primary" id="treeSaveNodeBtn">💾 Сохранить узел</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: ДОБАВИТЬ СВЯЗЬ ======== -->
+        <div class="modal-overlay" id="treeEdgeModal" style="display:none;">
+            <div class="modal" style="max-width:400px;">
+                <div class="modal-header">
+                    <h2>🔗 Новая связь</h2>
+                    <button class="btn btn-small modal-close" id="treeEdgeModalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group"><label>От узла</label><span id="edgeFromLabel" class="input" style="display:block;background:#1a2128;padding:0.7rem 1rem;border-radius:30px;"></span></div>
+                    <div class="form-group"><label>К узлу</label>
+                        <select id="edgeToSelect" class="input"></select>
+                    </div>
+                    <div class="form-group"><label>Подпись на связи</label><input type="text" id="edgeLabel" class="input" placeholder="например: Пойти налево"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="treeEdgeCancelBtn">Отмена</button>
+                    <button class="btn btn-primary" id="treeEdgeSaveBtn">💾 Создать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======== МОДАЛКА: ДОБАВИТЬ КАРТОЧКУ К УЗЛУ ======== -->
+        <div class="modal-overlay" id="treeCardSelectModal" style="display:none;">
+            <div class="modal" style="max-width:500px;">
+                <div class="modal-header">
+                    <h2>Выберите карточку</h2>
+                    <button class="btn btn-small modal-close" id="treeCardSelectCloseBtn">✕</button>
+                </div>
+                <div class="modal-body" id="treeCardSelectList"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="treeCardSelectCancelBtn">Отмена</button>
                 </div>
             </div>
         </div>

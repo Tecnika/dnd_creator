@@ -1386,3 +1386,136 @@ select.input {
     border-radius: 12px;
     border: 1px solid #3a434e;
 }
+
+/* =======================================================
+   СТИЛИ ДЛЯ СЮЖЕТНОГО ДРЕВА
+   ======================================================= */
+
+/* Tree modal */
+.modal-tree {
+    max-width: 900px !important;
+    height: 90vh;
+}
+.tree-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.tree-body {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    padding: 0.8rem 1.2rem;
+    height: calc(90vh - 60px);
+    overflow: hidden;
+}
+.tree-canvas-wrapper {
+    flex: 1;
+    background: #161c24;
+    border-radius: 16px;
+    border: 1px solid #2a3a4a;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+.tree-svg {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    display: block;
+}
+
+/* Node editor panel */
+.tree-node-editor {
+    width: 280px;
+    flex-shrink: 0;
+    background: #1f262e;
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1px solid #3a4a5a;
+    overflow-y: auto;
+    max-height: 100%;
+}
+.tree-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #f5e7d3;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #3a434f;
+}
+.tree-node-cards, .tree-node-edges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0.3rem 0;
+}
+.tree-card-pill {
+    background: #2a3a2a;
+    border: 1px solid #3a5a3a;
+    padding: 0.1rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #b0d8b0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.tree-edge-pill {
+    background: #2a3a4a;
+    border: 1px solid #3a5a6a;
+    padding: 0.1rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #8ac0d8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.tree-remove-card, .tree-remove-edge {
+    cursor: pointer;
+    color: #e88;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+.tree-remove-card:hover, .tree-remove-edge:hover {
+    color: #f44;
+}
+
+/* Card selector in tree */
+.tree-card-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.8rem;
+    background: #1f262e;
+    border-radius: 12px;
+    margin-bottom: 0.3rem;
+    cursor: pointer;
+    transition: 0.1s;
+    border: 1px solid #3a434e;
+}
+.tree-card-option:hover {
+    border-color: #b48b5a;
+    background: #2a2f38;
+}
+.tree-card-option span {
+    font-size: 0.85rem;
+    color: #b0bed0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tree-body {
+        flex-direction: column;
+    }
+    .tree-node-editor {
+        width: 100%;
+        max-height: 300px;
+    }
+    .tree-canvas-wrapper {
+        min-height: 300px;
+    }
+}

@@ -1255,7 +1255,373 @@
     $('printGameBtn').addEventListener('click', () => window.print());
 
     // ==============================
-    // 14. INIT
+    // 14. STORY TREE
+    // ==============================
+    let treeNodes = [];
+    let treeEdges = [];
+    let selectedNodeId = null;
+    let nextNodeId = 1;
+    let dragNodeId = null;
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let edgeFromId = null;
+
+    function initTree() {
+        if (!currentGame || !currentGame.storyTree) {
+            treeNodes = [];
+            treeEdges = [];
+            nextNodeId = 1;
+        } else {
+            treeNodes = (currentGame.storyTree.nodes || []).map(n => ({ ...n }));
+            treeEdges = (currentGame.storyTree.edges || []).map(e => ({ ...e }));
+            nextNodeId = treeNodes.reduce((m, n) => Math.max(m, parseInt(n.id.replace('node', '')) || 0), 0) + 1;
+        }
+        selectedNodeId = null;
+        $('treeNodeEditor').style.display = 'none';
+        renderTree();
+    }
+
+    function saveTree() {
+        if (!currentGame || !currentUser) return;
+        db.collection('games').doc(currentGame.id).update({
+            storyTree: { nodes: treeNodes, edges: treeEdges }
+        }).catch(err => showToast('❌ Ошибка сохранения древа: ' + err.message, true));
+    }
+
+    function renderTree() {
+        const svg = document.getElementById('treeSvg');
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        if (!svg) return;
+        const w = wrapper.clientWidth || 800;
+        const h = 500;
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.innerHTML = '';
+
+        // Draw edges
+        treeEdges.forEach(edge => {
+            const from = treeNodes.find(n => n.id === edge.from);
+            const to = treeNodes.find(n => n.id === edge.to);
+            if (!from || !to) return;
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+            line.setAttribute('x2', to.x); line.setAttribute('y2', to.y);
+            line.setAttribute('stroke', '#4a6a8a');
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-dasharray', '5,3');
+            svg.appendChild(line);
+
+            // Arrow head
+            const angle = Math.atan2(to.y - from.y, to.x - from.x);
+            const ax = to.x - 15 * Math.cos(angle);
+            const ay = to.y - 15 * Math.sin(angle);
+            const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const a1x = ax + 8 * Math.cos(angle - 2.5);
+            const a1y = ay + 8 * Math.sin(angle - 2.5);
+            const a2x = ax + 8 * Math.cos(angle + 2.5);
+            const a2y = ay + 8 * Math.sin(angle + 2.5);
+            arrow.setAttribute('points', `${to.x},${to.y} ${a1x},${a1y} ${a2x},${a2y}`);
+            arrow.setAttribute('fill', '#4a6a8a');
+            svg.appendChild(arrow);
+
+            // Label
+            if (edge.label) {
+                const midX = (from.x + to.x) / 2;
+                const midY = (from.y + to.y) / 2 - 10;
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', midX); txt.setAttribute('y', midY);
+                txt.setAttribute('text-anchor', 'middle');
+                txt.setAttribute('fill', '#8ac0d8');
+                txt.setAttribute('font-size', '11');
+                txt.textContent = edge.label;
+                svg.appendChild(txt);
+            }
+        });
+
+        // Draw nodes
+        treeNodes.forEach(node => {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('data-node-id', node.id);
+            g.style.cursor = 'grab';
+            const isSelected = node.id === selectedNodeId;
+
+            const nodeW = 140, nodeH = 50;
+            const rx = 12;
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', node.x - nodeW / 2);
+            rect.setAttribute('y', node.y - nodeH / 2);
+            rect.setAttribute('width', nodeW);
+            rect.setAttribute('height', nodeH);
+            rect.setAttribute('rx', rx);
+            const typeColors = { start: '#4a8a4a', encounter: '#8a4a4a', decision: '#8a7a4a', loot: '#4a6a8a', ending: '#8a4a8a' };
+            rect.setAttribute('fill', typeColors[node.type] || '#2a3a4a');
+            rect.setAttribute('stroke', isSelected ? '#f5c27b' : '#4a6a8a');
+            rect.setAttribute('stroke-width', isSelected ? '3' : '1.5');
+            g.appendChild(rect);
+
+            // Title text
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            title.setAttribute('x', node.x);
+            title.setAttribute('y', node.y - 5);
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('fill', '#fff');
+            title.setAttribute('font-size', '12');
+            title.setAttribute('font-weight', '600');
+            title.textContent = node.title.length > 18 ? node.title.slice(0, 17) + '…' : node.title;
+            g.appendChild(title);
+
+            // Card count
+            const nCards = (node.cards || []).length;
+            if (nCards > 0) {
+                const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                badge.setAttribute('x', node.x);
+                badge.setAttribute('y', node.y + 14);
+                badge.setAttribute('text-anchor', 'middle');
+                badge.setAttribute('fill', '#b48b5a');
+                badge.setAttribute('font-size', '10');
+                badge.textContent = `📎 ${nCards}`;
+                g.appendChild(badge);
+            }
+
+            // Drag events
+            g.addEventListener('mousedown', e => {
+                e.preventDefault();
+                const rect = wrapper.getBoundingClientRect();
+                const scaleX = w / rect.width;
+                dragNodeId = node.id;
+                dragOffsetX = (e.clientX - rect.left) * scaleX - node.x;
+                dragOffsetY = (e.clientY - rect.top) * scaleY - node.y;
+                g.style.cursor = 'grabbing';
+            });
+
+            // Click to select/edit
+            g.addEventListener('click', e => {
+                e.stopPropagation();
+                selectTreeNode(node.id);
+            });
+
+            svg.appendChild(g);
+        });
+
+        // Background click to deselect
+        svg.addEventListener('click', () => {
+            selectedNodeId = null;
+            $('treeNodeEditor').style.display = 'none';
+            renderTree();
+        });
+    }
+
+    // SVG drag handling
+    let scaleY = 1;
+    document.addEventListener('mousemove', e => {
+        if (!dragNodeId) return;
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        const svg = document.getElementById('treeSvg');
+        const rect = wrapper.getBoundingClientRect();
+        const w = wrapper.clientWidth || 800;
+        const h = 500;
+        scaleY = h / rect.height;
+        const scaleX = w / rect.width;
+        const node = treeNodes.find(n => n.id === dragNodeId);
+        if (node) {
+            node.x = Math.round((e.clientX - rect.left) * scaleX - dragOffsetX);
+            node.y = Math.round((e.clientY - rect.top) * scaleY - dragOffsetY);
+            renderTree();
+        }
+    });
+    document.addEventListener('mouseup', () => {
+        if (dragNodeId) { dragNodeId = null;
+            saveTree(); }
+    });
+
+    function selectTreeNode(nodeId) {
+        selectedNodeId = nodeId;
+        renderTree();
+        const node = treeNodes.find(n => n.id === nodeId);
+        if (!node) return;
+        $('treeEditorTitle').textContent = `✏️ ${node.title}`;
+        $('treeNodeTitle').value = node.title;
+        $('treeNodeDesc').value = node.description || '';
+        $('treeNodeType').value = node.type || 'default';
+        // Render assigned cards
+        const cardsDiv = $('treeNodeCards');
+        const assigned = (node.cards || []).map(cid => currentCards.find(c => c.id === cid) || currentCommonCards.find(c => c.id === cid)).filter(Boolean);
+        cardsDiv.innerHTML = assigned.length ? assigned.map(c =>
+            `<span class="tree-card-pill">${getCardTypeLabel(c.type)}: ${c.data?.name || c.name || '—'} <span class="tree-remove-card" data-card-id="${c.id}">✕</span></span>`
+        ).join('') : '<span style="opacity:0.5;font-size:0.85rem;">Нет привязанных карточек</span>';
+        cardsDiv.querySelectorAll('.tree-remove-card').forEach(el => {
+            el.addEventListener('click', () => {
+                const cid = el.dataset.cardId;
+                node.cards = (node.cards || []).filter(id => id !== cid);
+                selectTreeNode(nodeId);
+                saveTree();
+            });
+        });
+        // Render outgoing edges
+        const edgesDiv = $('treeNodeEdges');
+        const outgoing = treeEdges.filter(e => e.from === nodeId);
+        edgesDiv.innerHTML = outgoing.length ? outgoing.map(e => {
+            const target = treeNodes.find(n => n.id === e.to);
+            return `<span class="tree-edge-pill">→ ${target ? target.title : e.to} ${e.label ? '«' + e.label + '»' : ''} <span class="tree-remove-edge" data-edge-from="${e.from}" data-edge-to="${e.to}">✕</span></span>`;
+        }).join('') : '<span style="opacity:0.5;font-size:0.85rem;">Нет связей</span>';
+        edgesDiv.querySelectorAll('.tree-remove-edge').forEach(el => {
+            el.addEventListener('click', () => {
+                const f = el.dataset.edgeFrom, t = el.dataset.edgeTo;
+                treeEdges = treeEdges.filter(e => !(e.from === f && e.to === t));
+                selectTreeNode(nodeId);
+                saveTree();
+            });
+        });
+        $('treeNodeEditor').style.display = 'block';
+    }
+
+    // ---- Tree button ----
+    $('storyTreeBtn').addEventListener('click', () => {
+        if (!currentGame) { showToast('❌ Нет активной игры', true); return; }
+        initTree();
+        $('treeModal').style.display = 'flex';
+    });
+    $('treeModalCloseBtn').addEventListener('click', () => {
+        $('treeModal').style.display = 'none';
+        saveTree();
+    });
+
+    // ---- Add node ----
+    $('treeAddNodeBtn').addEventListener('click', () => {
+        const id = 'node' + (nextNodeId++);
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        const w = wrapper.clientWidth || 800;
+        const node = { id, title: 'Новый узел', description: '', type: 'default', x: w / 2 + Math.random() * 100 - 50, y: 100 + Math.random() * 200, cards: [] };
+        treeNodes.push(node);
+        renderTree();
+        selectTreeNode(id);
+        saveTree();
+    });
+
+    // ---- Save node ----
+    $('treeSaveNodeBtn').addEventListener('click', () => {
+        if (!selectedNodeId) return;
+        const node = treeNodes.find(n => n.id === selectedNodeId);
+        if (!node) return;
+        node.title = $('treeNodeTitle').value.trim() || 'Без названия';
+        node.description = $('treeNodeDesc').value.trim();
+        node.type = $('treeNodeType').value;
+        renderTree();
+        selectTreeNode(selectedNodeId);
+        saveTree();
+        showToast('✅ Узел сохранён');
+    });
+
+    // ---- Delete node ----
+    $('treeEditorDeleteBtn').addEventListener('click', () => {
+        if (!selectedNodeId || !confirm('Удалить узел и все его связи?')) return;
+        treeNodes = treeNodes.filter(n => n.id !== selectedNodeId);
+        treeEdges = treeEdges.filter(e => e.from !== selectedNodeId && e.to !== selectedNodeId);
+        selectedNodeId = null;
+        $('treeNodeEditor').style.display = 'none';
+        renderTree();
+        saveTree();
+    });
+
+    // ---- Auto layout ----
+    $('treeAutoBtn').addEventListener('click', () => {
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        const w = wrapper.clientWidth || 800;
+        const levels = [];
+        const visited = new Set();
+        function traverse(id, depth) {
+            if (visited.has(id)) return;
+            visited.add(id);
+            if (!levels[depth]) levels[depth] = [];
+            levels[depth].push(id);
+            treeEdges.filter(e => e.from === id).forEach(e => traverse(e.to, depth + 1));
+        }
+        // Find root(s) - nodes with no incoming edges
+        const hasIncoming = new Set(treeEdges.map(e => e.to));
+        treeNodes.forEach(n => {
+            if (!hasIncoming.has(n.id)) traverse(n.id, 0);
+        });
+        // Place unvisited
+        treeNodes.forEach(n => {
+            if (!visited.has(n.id)) {
+                if (!levels[0]) levels[0] = [];
+                levels[0].push(n.id);
+            }
+        });
+        const startY = 50, gapY = 90, gapX = 160;
+        levels.forEach((ids, li) => {
+            const totalW = ids.length * gapX;
+            const startX = (w - totalW) / 2 + gapX / 2;
+            ids.forEach((id, i) => {
+                const node = treeNodes.find(n => n.id === id);
+                if (node) { node.x = startX + i * gapX;
+                    node.y = startY + li * gapY; }
+            });
+        });
+        renderTree();
+        saveTree();
+        showToast('✅ Авторасстановка завершена');
+    });
+
+    // ---- Add edge ----
+    $('treeAddEdgeBtn').addEventListener('click', () => {
+        if (!selectedNodeId) return;
+        edgeFromId = selectedNodeId;
+        const fromNode = treeNodes.find(n => n.id === selectedNodeId);
+        $('edgeFromLabel').textContent = fromNode ? fromNode.title : selectedNodeId;
+        const select = $('edgeToSelect');
+        select.innerHTML = treeNodes.filter(n => n.id !== selectedNodeId).map(n =>
+            `<option value="${n.id}">${n.title}</option>`
+        ).join('');
+        $('edgeLabel').value = '';
+        $('treeEdgeModal').style.display = 'flex';
+    });
+    $('treeEdgeModalCloseBtn').addEventListener('click', () => $('treeEdgeModal').style.display = 'none');
+    $('treeEdgeCancelBtn').addEventListener('click', () => $('treeEdgeModal').style.display = 'none');
+    $('treeEdgeSaveBtn').addEventListener('click', () => {
+        const to = $('edgeToSelect').value;
+        if (!to) { showToast('❌ Выберите целевой узел', true); return; }
+        if (treeEdges.find(e => e.from === edgeFromId && e.to === to)) {
+            showToast('❌ Такая связь уже существует', true);
+            return;
+        }
+        treeEdges.push({ from: edgeFromId, to, label: $('edgeLabel').value.trim() });
+        $('treeEdgeModal').style.display = 'none';
+        renderTree();
+        if (selectedNodeId) selectTreeNode(selectedNodeId);
+        saveTree();
+    });
+
+    // ---- Add card to node ----
+    $('treeAddCardBtn').addEventListener('click', () => {
+        if (!selectedNodeId) return;
+        const allCards = [...currentCards, ...currentCommonCards];
+        const node = treeNodes.find(n => n.id === selectedNodeId);
+        const assigned = new Set(node ? node.cards : []);
+        const list = $('treeCardSelectList');
+        list.innerHTML = allCards.filter(c => !assigned.has(c.id)).map(c =>
+            `<div class="tree-card-option" data-card-id="${c.id}">
+                <span>${getCardTypeLabel(c.type)}: ${c.data?.name || c.name || '—'}</span>
+                <button class="btn-small">➕</button>
+            </div>`
+        ).join('') || '<p style="opacity:0.6;">Все карточки уже привязаны</p>';
+        list.querySelectorAll('.tree-card-option').forEach(el => {
+            el.addEventListener('click', () => {
+                const cid = el.dataset.cardId;
+                if (node) {
+                    if (!node.cards) node.cards = [];
+                    node.cards.push(cid);
+                    selectTreeNode(selectedNodeId);
+                    saveTree();
+                    $('treeCardSelectModal').style.display = 'none';
+                }
+            });
+        });
+        $('treeCardSelectModal').style.display = 'flex';
+    });
+    $('treeCardSelectCloseBtn').addEventListener('click', () => $('treeCardSelectModal').style.display = 'none');
+    $('treeCardSelectCancelBtn').addEventListener('click', () => $('treeCardSelectModal').style.display = 'none');
+
+    // ==============================
+    // 15. INIT
     // ==============================
     // Check if firebaseConfig exists
     if (typeof firebaseConfig === 'undefined') {
