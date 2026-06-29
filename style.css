@@ -793,7 +793,7 @@ body {
     gap: 0.8rem;
     flex-wrap: wrap;
 }
-.user-email {
+.user-login {
     font-size: 0.85rem;
     color: #b0bed0;
     padding: 0.2rem 0.8rem;

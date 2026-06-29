@@ -111,17 +111,37 @@
     }
 
     // ==============================
-    // 5. AUTH
+    // 5. AUTH (логин/пароль без почты)
     // ==============================
+    let currentUsername = '';
+
+    function usernameToEmail(username) {
+        return username.toLowerCase().replace(/[^a-z0-9]/g, '_') + '@dnd.local';
+    }
+
+    function loadUsername(uid) {
+        return db.collection('usernames').doc(uid).get().then(doc => {
+            if (doc.exists) {
+                currentUsername = doc.data().username;
+                $('userDisplay').textContent = currentUsername;
+            } else {
+                currentUsername = uid.slice(0, 8);
+                $('userDisplay').textContent = currentUsername;
+            }
+        });
+    }
+
     auth.onAuthStateChanged(user => {
         currentUser = user;
         if (user) {
-            $('userEmail').textContent = user.email;
             $('authButtons').style.display = 'none';
             $('userMenu').style.display = 'flex';
-            showView('games');
-            loadGames();
+            loadUsername(user.uid).then(() => {
+                showView('games');
+                loadGames();
+            });
         } else {
+            currentUsername = '';
             $('authButtons').style.display = 'flex';
             $('userMenu').style.display = 'none';
             showView('auth');
@@ -147,24 +167,47 @@
         $('registerForm').style.display = 'block'; });
 
     $('loginBtn').addEventListener('click', () => {
-        const email = $('loginEmail').value.trim();
+        const username = $('loginUsername').value.trim();
         const pass = $('loginPassword').value.trim();
-        if (!email || !pass) { showAuthError($('authError'), 'Заполните все поля'); return; }
+        if (!username || !pass) { showAuthError($('authError'), 'Заполните все поля'); return; }
+        const email = usernameToEmail(username);
         auth.signInWithEmailAndPassword(email, pass)
             .then(() => showToast('✅ Вход выполнен'))
-            .catch(err => showAuthError($('authError'), err.message));
+            .catch(err => {
+                if (err.code === 'auth/user-not-found') {
+                    showAuthError($('authError'), 'Пользователь не найден');
+                } else if (err.code === 'auth/wrong-password') {
+                    showAuthError($('authError'), 'Неверный пароль');
+                } else {
+                    showAuthError($('authError'), err.message);
+                }
+            });
     });
 
     $('registerBtn').addEventListener('click', () => {
-        const email = $('registerEmail').value.trim();
+        const username = $('registerUsername').value.trim();
         const pass = $('registerPassword').value.trim();
         const confirm = $('registerConfirm').value.trim();
-        if (!email || !pass || !confirm) { showAuthError($('regError'), 'Заполните все поля'); return; }
+        if (!username || !pass || !confirm) { showAuthError($('regError'), 'Заполните все поля'); return; }
+        if (username.length < 3) { showAuthError($('regError'), 'Логин минимум 3 символа'); return; }
+        if (!/^[a-zа-яё0-9_]+$/i.test(username)) { showAuthError($('regError'), 'Логин: только буквы, цифры и _'); return; }
         if (pass.length < 6) { showAuthError($('regError'), 'Пароль минимум 6 символов'); return; }
         if (pass !== confirm) { showAuthError($('regError'), 'Пароли не совпадают'); return; }
-        auth.createUserWithEmailAndPassword(email, pass)
-            .then(() => showToast('✅ Регистрация успешна'))
-            .catch(err => showAuthError($('regError'), err.message));
+
+        // Check if username is already taken
+        db.collection('usernames').where('username', '==', username).get().then(snap => {
+            if (!snap.empty) {
+                showAuthError($('regError'), 'Этот логин уже занят');
+                return;
+            }
+            const email = usernameToEmail(username);
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then(result => {
+                    return db.collection('usernames').doc(result.user.uid).set({ username });
+                })
+                .then(() => showToast('✅ Регистрация успешна'))
+                .catch(err => showAuthError($('regError'), err.message));
+        }).catch(err => showAuthError($('regError'), err.message));
     });
 
     $('logoutBtn').addEventListener('click', () => {
