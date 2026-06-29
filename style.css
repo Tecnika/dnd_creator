@@ -1225,3 +1225,164 @@ select.input {
         grid-template-columns: 1fr;
     }
 }
+
+/* =======================================================
+   СТИЛИ ДЛЯ ПРАВИЛ (Simplified / Full D&D 5e)
+   ======================================================= */
+
+/* Rules selector in game creation */
+.rules-selector {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 0.3rem;
+    flex-wrap: wrap;
+}
+.rules-option {
+    flex: 1;
+    min-width: 200px;
+    cursor: pointer;
+}
+.rules-option input[type="radio"] {
+    display: none;
+}
+.rules-option-content {
+    display: block;
+    padding: 0.8rem 1rem;
+    background: #1a2128;
+    border: 2px solid #3a4a5a;
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+.rules-option input[type="radio"]:checked + .rules-option-content {
+    border-color: #b48b5a;
+    background: #1f2a1f;
+}
+.rules-option-title {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #f5e7d3;
+    margin-bottom: 0.2rem;
+}
+.rules-option-desc {
+    display: block;
+    font-size: 0.75rem;
+    color: #8899aa;
+    line-height: 1.3;
+}
+
+/* Rules badge */
+.rules-badge {
+    display: inline-block;
+    background: #2a3a4a;
+    color: #8ac0d8;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 30px;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    border: 1px solid #3a6a7a;
+    font-weight: 400;
+}
+
+/* D&D card extras */
+.dnd-banner {
+    background: linear-gradient(135deg, #2a3a4a, #1f2a3a);
+    border: 1px solid #4a6a8a;
+    border-radius: 12px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #8ac0d8;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+.dnd-section {
+    margin: 0.5rem 0 0.2rem;
+    font-size: 0.85rem;
+}
+.dnd-section strong {
+    color: #ccb690;
+    font-weight: 500;
+    display: inline-block;
+    width: 100%;
+    border-bottom: 1px solid #33404d;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+}
+.dnd-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    color: #b0bed0;
+    background: #1b2128;
+    padding: 0.2rem 0.7rem;
+    border-radius: 12px;
+    margin: 0.2rem 0;
+}
+.save-proficient span:first-child {
+    color: #f5c27b !important;
+}
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    margin: 0.2rem 0;
+}
+.skill-pill {
+    background: #1f262e;
+    border: 1px solid #3a434e;
+    padding: 0.05rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #b0bed0;
+    cursor: help;
+}
+.skill-pill.skilled {
+    background: #2a3a2a;
+    border-color: #4a7a4a;
+    color: #b0e8b0;
+}
+
+/* D&D editor */
+.dnd-editor-hint {
+    background: #1a2a2a;
+    border: 1px solid #3a6a5a;
+    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    color: #8ac0a0;
+    margin-bottom: 0.8rem;
+}
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+    margin: 0.3rem 0;
+}
+.checkbox-group .checkbox-label {
+    font-size: 0.8rem;
+    background: #1f262e;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid #3a434e;
+}
+.checkbox-group .checkbox-label input {
+    margin-right: 0.3rem;
+}
+.skills-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.2rem;
+    margin: 0.3rem 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.skills-checkbox-grid .checkbox-label {
+    font-size: 0.75rem;
+    background: #1f262e;
+    padding: 0.1rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #3a434e;
+}

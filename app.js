@@ -298,6 +298,7 @@
         $('gameNameInput').value = '';
         $('gameSettingInput').value = '';
         $('gameDescInput').value = '';
+        document.querySelector('input[name="rulesMode"][value="simplified"]').checked = true;
         $('gameModal').style.display = 'flex';
     });
     $('gameModalCloseBtn').addEventListener('click', () => $('gameModal').style.display = 'none');
@@ -306,11 +307,13 @@
         const name = $('gameNameInput').value.trim();
         if (!name) { showToast('❌ Введите название игры', true); return; }
         if (!currentUser) return;
+        const rulesMode = document.querySelector('input[name="rulesMode"]:checked').value;
         db.collection('games').add({
             name,
             setting: $('gameSettingInput').value.trim(),
             description: $('gameDescInput').value.trim(),
             ownerId: currentUser.uid,
+            rulesMode,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             $('gameModal').style.display = 'none';
@@ -344,13 +347,18 @@
         }).catch(err => showToast('❌ Ошибка: ' + err.message, true));
     }
 
+    function getRulesLabel(mode) {
+        return mode === 'full' ? '🐉 Полные D&D 5e' : '📋 Упрощённые';
+    }
+
     function renderGameView() {
         if (!currentGame) return;
-        $('gameTitle').textContent = `🎮 ${currentGame.name || 'Без названия'}`;
-        $('sidebarGameName').textContent = currentGame.name || '—';
+        const mode = currentGame.rulesMode || 'simplified';
+        $('gameTitle').innerHTML = `🎮 ${currentGame.name || 'Без названия'} <span class="rules-badge">${getRulesLabel(mode)}</span>`;
+        $('sidebarGameName').innerHTML = `${currentGame.name || '—'} <span class="rules-badge" style="font-size:0.7rem;">${mode === 'full' ? '🐉' : '📋'}</span>`;
         $('sidebarGameSetting').textContent = currentGame.setting ? `🏔️ ${currentGame.setting}` : '';
         $('sidebarGameDesc').textContent = currentGame.description || '';
-        gameInfo.innerHTML = `🏔️ <strong>${currentGame.name || 'Игра'}</strong>${currentGame.setting ? ' · ' + currentGame.setting : ''}`;
+        gameInfo.innerHTML = `🏔️ <strong>${currentGame.name || 'Игра'}</strong>${currentGame.setting ? ' · ' + currentGame.setting : ''} · ${getRulesLabel(mode)}`;
         currentFilter = 'all';
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
@@ -403,8 +411,119 @@
     }
 
     // ==============================
-    // 9. RENDER CARDS
+    // 9. D&D 5e HELPER FUNCTIONS
     // ==============================
+    function calcMod(score) {
+        if (score == null || score === '') return 0;
+        return Math.floor((Number(score) - 10) / 2);
+    }
+
+    function calcProfBonus(level) {
+        level = Number(level) || 1;
+        return Math.ceil(level / 4) + 1;
+    }
+
+    const SKILLS_5E = {
+        'acrobatics': 'Акробатика', 'animal_handling': 'Уход за животными', 'arcana': 'Магия',
+        'athletics': 'Атлетика', 'deception': 'Обман', 'history': 'История', 'insight': 'Проницательность',
+        'intimidation': 'Запугивание', 'investigation': 'Расследование', 'medicine': 'Медицина',
+        'nature': 'Природа', 'perception': 'Восприятие', 'performance': 'Выступление',
+        'persuasion': 'Убеждение', 'religion': 'Религия', 'sleight_of_hand': 'Ловкость рук',
+        'stealth': 'Скрытность', 'survival': 'Выживание'
+    };
+    const SKILL_ABILITIES = {
+        'acrobatics': 'dexterity', 'animal_handling': 'wisdom', 'arcana': 'intelligence',
+        'athletics': 'strength', 'deception': 'charisma', 'history': 'intelligence',
+        'insight': 'wisdom', 'intimidation': 'charisma', 'investigation': 'intelligence',
+        'medicine': 'wisdom', 'nature': 'intelligence', 'perception': 'wisdom',
+        'performance': 'charisma', 'persuasion': 'charisma', 'religion': 'intelligence',
+        'sleight_of_hand': 'dexterity', 'stealth': 'dexterity', 'survival': 'wisdom'
+    };
+    const SAVE_ABILITIES = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+    const SAVE_LABELS = { strength: 'Сила', dexterity: 'Ловкость', constitution: 'Телосложение', intelligence: 'Интеллект', wisdom: 'Мудрость', charisma: 'Харизма' };
+    const STAT_LABELS = SAVE_LABELS;
+
+    function isFullMode() {
+        return currentGame && currentGame.rulesMode === 'full';
+    }
+
+    function buildDndPlayerExtra(data) {
+        const s = data.stats || {};
+        const level = Number(data.level) || 1;
+        const prof = calcProfBonus(level);
+        const race = data.race || '';
+        const cls = data.class || '';
+        const subclass = data.subclass || '';
+        const background = data.background || '';
+        const alignment = data.alignment || '';
+        const xp = data.xp || '';
+        const saveProfs = data.saveProficiencies || [];
+        const skillProfs = data.skillProficiencies || [];
+        const spellAbility = data.spellcastingAbility || '';
+        const spellDC = spellAbility ? (8 + prof + calcMod(s[spellAbility])) : '';
+        const spellAtk = spellAbility ? (prof + calcMod(s[spellAbility])) : '';
+
+        let sHtml = SAVE_ABILITIES.map(k => {
+            const val = s[k] ?? '—';
+            const mod = val === '—' ? '—' : (calcMod(val) >= 0 ? '+' + calcMod(val) : calcMod(val));
+            const isProf = saveProfs.includes(k);
+            return `<div class="stat-item${isProf ? ' save-proficient' : ''}"><span title="${isProf ? 'Владение' : ''}">${SAVE_LABELS[k]}${isProf ? ' ⚡' : ''}</span><span>${val} (${mod})</span></div>`;
+        }).join('');
+
+        let skillsHtml = Object.entries(SKILLS_5E).map(([key, label]) => {
+            const abil = SKILL_ABILITIES[key];
+            const abilMod = calcMod(s[abil]);
+            const isProf = skillProfs.includes(key);
+            const bonus = isProf ? abilMod + prof : abilMod;
+            const sign = bonus >= 0 ? '+' : '';
+            return `<span class="skill-pill${isProf ? ' skilled' : ''}" title="${label} (${STAT_LABELS[abil]})">${label} ${sign}${bonus}</span>`;
+        }).join('');
+
+        let spellsHtml = '';
+        if (spellAbility) {
+            const slots = data.spellSlots || {};
+            const spells = data.spells || [];
+            spellsHtml = `
+                <div class="dnd-section">
+                    <strong>🔮 Заклинания</strong>
+                    <div class="dnd-stat-row"><span>КД закл: ${spellDC}</span><span>Атака: +${spellAtk}</span><span>Способность: ${STAT_LABELS[spellAbility]}</span></div>
+                    ${Object.keys(slots).length ? `<div class="dnd-stat-row"><span>Ячейки:</span>${Object.entries(slots).filter(([k,v]) => v).map(([k,v]) => `<span>${k} ур: ${v}</span>`).join('')}</div>` : ''}
+                    ${spells.length ? `<div class="list-tag">${spells.map(s => `<span>${s.name||s}${s.level ? ' ['+s.level+']' : ''}${s.prepared ? ' ✓' : ''}</span>`).join('')}</div>` : ''}
+                </div>`;
+        }
+
+        return `
+            <div class="dnd-banner">⚡ Уровень ${level} · Б.М. +${prof} · ${race ? race + ' ' : ''}${cls ? cls + (subclass ? ' ('+subclass+')' : '') : ''}</div>
+            ${background ? `<div class="dnd-stat-row"><span>📖 Предыстория: ${background}</span>${alignment ? `<span>⚖️ ${alignment}</span>` : ''}${xp ? `<span>📊 ${xp} XP</span>` : ''}</div>` : ''}
+            <div class="dnd-section"><strong>🛡️ Спасброски</strong><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin:0.3rem 0;">${sHtml}</div></div>
+            <div class="dnd-section"><strong>🎯 Навыки</strong><div class="skills-grid">${skillsHtml}</div></div>
+            <div class="dnd-stat-row">
+                <span>❤️ HP ${data.health?.current || '—'}/${data.health?.max || '—'}</span>
+                <span>🛡️ КБ ${data.armor?.ac || '—'}</span>
+                <span>🏃‍♂️ Скорость ${data.speed || '30'} фт</span>
+                <span>🎲 Кости HP: ${data.hitDice || '—'}</span>
+            </div>
+            ${data.features?.length ? `<div class="dnd-section"><strong>⚔️ Особенности</strong><div class="list-tag">${data.features.map(f => `<span title="${f.description||''}">${f.name||f}</span>`).join('')}</div></div>` : ''}
+            ${spellsHtml}
+        `;
+    }
+
+    function buildDndEnemyExtra(data) {
+        const s = data.stats || {};
+        const skills = data.skills || [];
+        const cr = data.challengeRating || '';
+        const xp = data.xp || '';
+        return `
+            ${cr ? `<div class="dnd-banner">⚠️ CR ${cr}${xp ? ' · ' + xp + ' XP' : ''}</div>` : ''}
+            ${data.resistances?.length ? `<div class="dnd-stat-row"><span>🔰 Сопротивления: ${data.resistances.join(', ')}</span></div>` : ''}
+            ${data.immunities?.length ? `<div class="dnd-stat-row"><span>🛡️ Иммунитеты: ${data.immunities.join(', ')}</span></div>` : ''}
+            ${data.conditionImmunities?.length ? `<div class="dnd-stat-row"><span>🧊 Недейств. эффекты: ${data.conditionImmunities.join(', ')}</span></div>` : ''}
+            ${data.senses ? `<div class="dnd-stat-row"><span>👁️ Чувства: ${data.senses}</span></div>` : ''}
+            ${data.languages ? `<div class="dnd-stat-row"><span>🗣️ Языки: ${data.languages}</span></div>` : ''}
+            ${data.legendaryActions ? `<div class="dnd-stat-row"><span>👑 Легендарные действия (${data.legendaryActions}/ход)</span></div>` : ''}
+        `;
+    }
+
     function renderCards() {
         if (!container) return;
         const allCards = [...currentCards, ...currentCommonCards];
@@ -446,16 +565,17 @@
         const deleteAction = `delete-card-${card.id}`;
         const editAction = `edit-card-${card.id}`;
 
+        const fullMode = isFullMode();
         let body = '';
         switch (type) {
             case 'player':
-                body = buildPlayerCardBody(data);
+                body = buildPlayerCardBody(data, fullMode);
                 break;
             case 'friendly':
                 body = buildFriendlyCardBody(data);
                 break;
             case 'enemy':
-                body = buildEnemyCardBody(data);
+                body = buildEnemyCardBody(data, fullMode);
                 break;
             case 'weapon':
             case 'armor':
@@ -506,7 +626,8 @@
     }
 
     // ---- Card builders (adapted from original) ----
-    function buildPlayerCardBody(d) {
+    function buildPlayerCardBody(d, fullMode) {
+        if (fullMode) return buildDndPlayerExtra(d);
         const s = d.stats || {};
         const h = d.health || { max: '—', current: '—' };
         const a = d.armor || { type: '—', ac: '—', resistance: '—', durability: '—' };
@@ -546,12 +667,14 @@
         `;
     }
 
-    function buildEnemyCardBody(d) {
+    function buildEnemyCardBody(d, fullMode) {
         const s = d.stats || {};
         const a = d.armor || { ac: '—', resistance: '—', durability: '—' };
         const sk = d.skills || [];
+        const extra = fullMode ? buildDndEnemyExtra(d) : '';
         return `
             ${d.subtype ? `<div style="font-size:0.8rem;color:#8899aa;margin-bottom:0.3rem;">${d.subtype}</div>` : ''}
+            ${extra}
             <div class="hp-ac"><span>❤️ <strong>${d.health || '—'}</strong> HP</span><span>🛡️ <strong>${a.ac}</strong> AC</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
             ${Object.keys(s).length ? `<div class="stats-grid">${Object.entries(s).map(([k,v]) => `<div class="stat-item"><span>${k}</span><span>${v}</span></div>`).join('')}</div>` : ''}
             <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
@@ -699,11 +822,44 @@
     function renderCardExtraFields(type, data) {
         const el = $('cardExtraFields');
         const d = data || getDefaultCardData(type);
+        const fullMode = isFullMode();
         let html = '';
 
         switch (type) {
             case 'player':
-                html = `
+                if (fullMode) {
+                    html = `
+                        <div class="dnd-editor-hint">🐉 Полные правила D&D 5e — заполните поля ниже</div>
+                        <div class="form-row">
+                            <div class="form-group"><label>🎭 Раса</label><input type="text" id="cf_race" class="input" value="${esc(d.race||'')}" placeholder="Человек, Эльф..."></div>
+                            <div class="form-group"><label>⚔️ Класс</label><input type="text" id="cf_class" class="input" value="${esc(d.class||'')}" placeholder="Воин, Маг..."></div>
+                            <div class="form-group"><label>📖 Архетип</label><input type="text" id="cf_subclass" class="input" value="${esc(d.subclass||'')}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>📖 Предыстория</label><input type="text" id="cf_background" class="input" value="${esc(d.background||'')}"></div>
+                            <div class="form-group"><label>⚖️ Мировоззрение</label><input type="text" id="cf_alignment" class="input" value="${esc(d.alignment||'')}" placeholder="Нейтральный добрый"></div>
+                            <div class="form-group"><label>📊 XP</label><input type="text" id="cf_xp" class="input" value="${esc(d.xp||'')}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Уровень</label><input type="number" id="cf_level" class="input" value="${d.level||1}" oninput="document.getElementById('cf_prof_hint').textContent='+'+calcProfBonus(this.value)"></div>
+                            <div class="form-group"><label>❤️ Макс. HP</label><input type="number" id="cf_hp_max" class="input" value="${(d.health&&d.health.max)||10}"></div>
+                            <div class="form-group"><label>🏃‍♂️ Скорость</label><input type="text" id="cf_speed" class="input" value="${esc(d.speed||'30')}"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>🎲 Кости HP</label><input type="text" id="cf_hitDice" class="input" value="${esc(d.hitDice||'')}" placeholder="d10"></div>
+                            <div class="form-group"><label>🛡️ КБ</label><input type="number" id="cf_ac" class="input" value="${(d.armor&&d.armor.ac)||10}"></div>
+                        </div>
+                        <div class="form-group"><label>Статы (через запятую: Сила 15, Ловкость 14...)</label><input type="text" id="cf_stats" class="input" value="${formatStats(d.stats)}" placeholder="Сила 15, Ловкость 14, Телосложение 13, Интеллект 12, Мудрость 10, Харизма 8"></div>
+                        <div class="dnd-editor-hint">💡 Модификаторы рассчитываются автоматически: (стат - 10) / 2, Б.М. = ceil(уровень/4) + 1</div>
+                        <div class="form-group"><label>🛡️ Спасброски (владение)</label><div class="checkbox-group" id="cf_saveProfs"></div></div>
+                        <div class="form-group"><label>🎯 Навыки (владение)</label><div class="skills-checkbox-grid" id="cf_skillProfs"></div></div>
+                        <div class="form-group"><label>🔮 Заклинательная способность</label><select id="cf_spellAbility" class="input"><option value="">— Нет заклинаний —</option><option value="intelligence" ${d.spellcastingAbility==='intelligence'?'selected':''}>Интеллект</option><option value="wisdom" ${d.spellcastingAbility==='wisdom'?'selected':''}>Мудрость</option><option value="charisma" ${d.spellcastingAbility==='charisma'?'selected':''}>Харизма</option></select></div>
+                        <div class="form-group"><label>Особенности/черты (каждая с новой строки — название | описание)</label><textarea id="cf_features" class="input" rows="2">${formatFeatures(d.features)}</textarea></div>
+                    `;
+                    // Save/Skill checkboxes will be populated after render
+                    setTimeout(() => populateDndCheckboxes(d), 0);
+                } else {
+                    html = `
                     <div class="form-row"><div class="form-group"><label>Профессия</label><input type="text" id="cf_profession" class="input" value="${esc(d.profession||'')}"></div>
                     <div class="form-group"><label>Роль</label><input type="text" id="cf_role" class="input" value="${esc(d.role||'')}"></div>
                     <div class="form-group"><label>Уровень</label><input type="number" id="cf_level" class="input" value="${d.level||1}"></div></div>
@@ -714,6 +870,7 @@
                     <div class="form-group"><label>Снаряжение (через запятую)</label><input type="text" id="cf_equipment" class="input" value="${formatArray(d.equipment)}"></div>
                     <div class="form-group"><label>Цели (каждая с новой строки)</label><textarea id="cf_goals" class="input" rows="2">${formatArrayMultiline(d.goals)}</textarea></div>
                 `;
+                }
                 break;
             case 'friendly':
                 html = `
@@ -724,13 +881,37 @@
                 `;
                 break;
             case 'enemy':
-                html = `
+                if (fullMode) {
+                    html = `
+                        <div class="dnd-editor-hint">🐉 Полные правила D&D 5e</div>
+                        <div class="form-group"><label>Тип врага</label><input type="text" id="cf_subtype" class="input" value="${esc(d.subtype||'')}"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>❤️ HP</label><input type="number" id="cf_hp" class="input" value="${d.health||10}"></div>
+                            <div class="form-group"><label>🛡️ КБ</label><input type="number" id="cf_ac" class="input" value="${(d.armor&&d.armor.ac)||10}"></div>
+                            <div class="form-group"><label>⚠️ CR</label><input type="text" id="cf_cr" class="input" value="${esc(d.challengeRating||'')}"></div>
+                            <div class="form-group"><label>📊 XP</label><input type="text" id="cf_xp" class="input" value="${esc(d.xp||'')}"></div>
+                        </div>
+                        <div class="form-group"><label>🔰 Сопротивления (через запятую)</label><input type="text" id="cf_resistances" class="input" value="${formatArraySimple(d.resistances)}" placeholder="огонь, холод"></div>
+                        <div class="form-group"><label>🛡️ Иммунитеты (через запятую)</label><input type="text" id="cf_immunities" class="input" value="${formatArraySimple(d.immunities)}" placeholder="яд, некротический"></div>
+                        <div class="form-group"><label>🧊 Недейств. эффекты (через запятую)</label><input type="text" id="cf_condImmunities" class="input" value="${formatArraySimple(d.conditionImmunities)}" placeholder="очарование, испуг"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>👁️ Чувства</label><input type="text" id="cf_senses" class="input" value="${esc(d.senses||'')}" placeholder="тёмное зрение 60 фт"></div>
+                            <div class="form-group"><label>🗣️ Языки</label><input type="text" id="cf_languages" class="input" value="${esc(d.languages||'')}"></div>
+                        </div>
+                        <div class="form-group"><label>👑 Легендарных действий за ход</label><input type="number" id="cf_legendary" class="input" value="${d.legendaryActions||0}"></div>
+                        <div class="form-group"><label>Слабость</label><input type="text" id="cf_weakness" class="input" value="${esc(d.weakness||'')}"></div>
+                        <div class="form-group"><label>Локация</label><input type="text" id="cf_location" class="input" value="${esc(d.location||'')}"></div>
+                    `;
+                } else {
+                    html = `
                     <div class="form-group"><label>Тип врага</label><input type="text" id="cf_subtype" class="input" value="${esc(d.subtype||'')}"></div>
                     <div class="form-row"><div class="form-group"><label>❤️ HP</label><input type="number" id="cf_hp" class="input" value="${d.health||10}"></div>
                     <div class="form-group"><label>🛡️ КБ</label><input type="number" id="cf_ac" class="input" value="${(d.armor&&d.armor.ac)||10}"></div></div>
                     <div class="form-group"><label>Слабость</label><input type="text" id="cf_weakness" class="input" value="${esc(d.weakness||'')}"></div>
                     <div class="form-group"><label>Локация</label><input type="text" id="cf_location" class="input" value="${esc(d.location||'')}"></div>
                 `;
+                }
+                break;
                 break;
             case 'weapon':
                 html = `
@@ -789,6 +970,44 @@
 
     function esc(s) { return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+    function formatArraySimple(arr) {
+        return Array.isArray(arr) ? arr.join(', ') : '';
+    }
+
+    function formatFeatures(features) {
+        if (!Array.isArray(features)) return '';
+        return features.map(f => typeof f === 'string' ? f : (f.name || '') + ' | ' + (f.description || '')).join('\n');
+    }
+
+    function populateDndCheckboxes(d) {
+        const saveContainer = document.getElementById('cf_saveProfs');
+        if (saveContainer) {
+            saveContainer.innerHTML = SAVE_ABILITIES.map(k =>
+                `<label class="checkbox-label"><input type="checkbox" value="${k}" ${(d.saveProficiencies||[]).includes(k)?'checked':''}>${SAVE_LABELS[k]}</label>`
+            ).join('');
+        }
+        const skillContainer = document.getElementById('cf_skillProfs');
+        if (skillContainer) {
+            skillContainer.innerHTML = Object.entries(SKILLS_5E).map(([k, label]) =>
+                `<label class="checkbox-label"><input type="checkbox" value="${k}" ${(d.skillProficiencies||[]).includes(k)?'checked':''}>${label}</label>`
+            ).join('');
+        }
+    }
+
+    function collectCheckboxValues(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    }
+
+    function collectFeatures(str) {
+        return str.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+            const parts = line.split('|').map(s => s.trim());
+            if (parts.length > 1) return { name: parts[0], description: parts.slice(1).join(' | ') };
+            return { name: parts[0], description: '' };
+        });
+    }
+
     function formatStats(stats) {
         if (!stats) return '';
         return Object.entries(stats).map(([k, v]) => {
@@ -836,19 +1055,43 @@
             return el ? parseInt(el.value) || def : def;
         };
         const data = { name: v('cardName'), description: v('cardDescription') };
+        const fullMode = isFullMode();
 
         switch (type) {
             case 'player':
-                data.profession = v('cf_profession');
-                data.role = v('cf_role');
-                data.level = num('cf_level', 1);
-                data.health = { max: num('cf_hp_max', 10), current: num('cf_hp_cur', 10) };
-                data.armor = { type: '', ac: num('cf_ac', 10), resistance: 0, durability: 0 };
-                data.stats = parseStats(v('cf_stats'));
-                data.equipment = parseArray(v('cf_equipment')).map(n => ({ name: n }));
-                data.consumables = [];
-                data.skills = [];
-                data.goals = parseArrayMultiline(v('cf_goals'));
+                if (fullMode) {
+                    data.race = v('cf_race');
+                    data.class = v('cf_class');
+                    data.subclass = v('cf_subclass');
+                    data.background = v('cf_background');
+                    data.alignment = v('cf_alignment');
+                    data.xp = v('cf_xp');
+                    data.level = num('cf_level', 1);
+                    data.health = { max: num('cf_hp_max', 10), current: num('cf_hp_max', 10) };
+                    data.armor = { type: '', ac: num('cf_ac', 10), resistance: 0, durability: 0 };
+                    data.speed = v('cf_speed') || '30';
+                    data.hitDice = v('cf_hitDice');
+                    data.stats = parseStats(v('cf_stats'));
+                    data.saveProficiencies = collectCheckboxValues('cf_saveProfs');
+                    data.skillProficiencies = collectCheckboxValues('cf_skillProfs');
+                    data.spellcastingAbility = v('cf_spellAbility') || '';
+                    data.features = collectFeatures(v('cf_features'));
+                    data.equipment = [];
+                    data.consumables = [];
+                    data.skills = [];
+                    data.goals = [];
+                } else {
+                    data.profession = v('cf_profession');
+                    data.role = v('cf_role');
+                    data.level = num('cf_level', 1);
+                    data.health = { max: num('cf_hp_max', 10), current: num('cf_hp_cur', 10) };
+                    data.armor = { type: '', ac: num('cf_ac', 10), resistance: 0, durability: 0 };
+                    data.stats = parseStats(v('cf_stats'));
+                    data.equipment = parseArray(v('cf_equipment')).map(n => ({ name: n }));
+                    data.consumables = [];
+                    data.skills = [];
+                    data.goals = parseArrayMultiline(v('cf_goals'));
+                }
                 break;
             case 'friendly':
                 data.role = v('cf_role');
@@ -861,11 +1104,27 @@
                 data.dialogue = {};
                 break;
             case 'enemy':
-                data.subtype = v('cf_subtype');
-                data.health = num('cf_hp', 10);
-                data.armor = { ac: num('cf_ac', 10), resistance: 0, durability: 0 };
-                data.weakness = v('cf_weakness');
-                data.location = v('cf_location');
+                if (fullMode) {
+                    data.subtype = v('cf_subtype');
+                    data.health = num('cf_hp', 10);
+                    data.armor = { ac: num('cf_ac', 10), resistance: 0, durability: 0 };
+                    data.challengeRating = v('cf_cr');
+                    data.xp = v('cf_xp');
+                    data.resistances = parseArray(v('cf_resistances'));
+                    data.immunities = parseArray(v('cf_immunities'));
+                    data.conditionImmunities = parseArray(v('cf_condImmunities'));
+                    data.senses = v('cf_senses');
+                    data.languages = v('cf_languages');
+                    data.legendaryActions = num('cf_legendary', 0);
+                    data.weakness = v('cf_weakness');
+                    data.location = v('cf_location');
+                } else {
+                    data.subtype = v('cf_subtype');
+                    data.health = num('cf_hp', 10);
+                    data.armor = { ac: num('cf_ac', 10), resistance: 0, durability: 0 };
+                    data.weakness = v('cf_weakness');
+                    data.location = v('cf_location');
+                }
                 data.stats = {};
                 data.skills = [];
                 data.dialogue = {};

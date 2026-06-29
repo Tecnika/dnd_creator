@@ -403,6 +403,25 @@
                         <label>Описание</label>
                         <textarea id="gameDescInput" class="input" placeholder="Краткое описание..." rows="3"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label>Режим правил</label>
+                        <div class="rules-selector">
+                            <label class="rules-option" data-mode="simplified">
+                                <input type="radio" name="rulesMode" value="simplified" checked>
+                                <span class="rules-option-content">
+                                    <span class="rules-option-title">📋 Упрощённые</span>
+                                    <span class="rules-option-desc">Как в оригинальном json — статы, HP, AC, снаряжение</span>
+                                </span>
+                            </label>
+                            <label class="rules-option" data-mode="full">
+                                <input type="radio" name="rulesMode" value="full">
+                                <span class="rules-option-content">
+                                    <span class="rules-option-title">🐉 Полные D&D 5e</span>
+                                    <span class="rules-option-desc">Раса, класс, навыки, спасброски, заклинания, CR и автоматические подсказки</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-outline" id="gameModalCancelBtn">Отмена</button>
