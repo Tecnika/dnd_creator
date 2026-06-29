@@ -145,7 +145,7 @@
 
                 <div class="info-block-card">
                     <h3>📄 Шаблон JSON для ручной загрузки</h3>
-                    <p>Вы можете загрузить карточки через JSON. Ниже пример формата для каждой карточки:</p>
+                    <p>Вы можете загрузить карточки через JSON. Примеры для всех типов:</p>
                     <pre><code>{
   "cards": [
     {
@@ -153,48 +153,171 @@
       "data": {
         "name": "Микула",
         "profession": "Богатырь",
-        "description": "Широкоплечий детина",
-        "stats": {
-          "strength": 5,
-          "agility": 2,
-          "endurance": 4,
-          "intelligence": 1,
-          "wisdom": 2,
-          "charisma": 1
-        },
+        "role": "Танк",
+        "level": 1,
+        "description": "Широкоплечий детина из рода кузнецов.",
+        "backstory": "Сын кузнеца, ушедший искать приключений.",
+        "stats": { "strength": 5, "agility": 2, "endurance": 4, "intelligence": 1, "wisdom": 2, "charisma": 1 },
         "health": { "max": 12, "current": 12 },
-        "armor": { "type": "Кольчуга", "ac": 16 }
+        "armor": { "type": "Кольчуга", "ac": 16, "resistance": 2, "durability": 5 },
+        "equipment": [{ "name": "Булава" }, { "name": "Щит" }],
+        "consumables": [{ "name": "Зелье здоровья", "quantity": 2 }],
+        "skills": [{ "name": "Плечо богатырское", "description": "Вышибает дверь" }],
+        "goals": ["Найти оброк", "Защитить деревню"]
+      }
+    },
+    {
+      "type": "friendly",
+      "data": {
+        "name": "Староста",
+        "role": "Глава деревни",
+        "description": "Седая борода, хитрый прищур.",
+        "health": 8,
+        "armor": { "ac": 10, "resistance": 0, "durability": 0 },
+        "stats": { "strength": 2, "charisma": 4 },
+        "motivation": "Спасти свою шкуру",
+        "secrets": ["Знает, где спрятан оброк"],
+        "skills": [{ "name": "Красноречие" }],
+        "dialogue": { "привет": "Здравствуйте, путники...", "угроза": "Я ничего не знаю!" }
       }
     },
     {
       "type": "enemy",
       "data": {
         "name": "Леший",
+        "type": "дух",
+        "subtype": "Лесной дух",
+        "description": "Мохнатое существо с глазами-угольями.",
         "health": 30,
-        "description": "Дух леса",
-        "stats": { "strength": 4, "agility": 3 },
-        "armor": { "ac": 12 }
+        "armor": { "ac": 14, "resistance": 3, "durability": 2 },
+        "stats": { "strength": 4, "agility": 3, "endurance": 5 },
+        "skills": [{ "name": "Когти", "damage": "1d6+2" }, { "name": "Рёв" }],
+        "weakness": "Огонь",
+        "location": "Тёмный лес",
+        "dialogue": { "бой": "Вы пожалеете!" }
       }
     },
     {
       "type": "weapon",
       "data": {
         "name": "Булава",
-        "description": "Тяжёлая булава",
+        "description": "Тяжёлая булава с шипами.",
         "damage": "1d8+2",
+        "bonus": "+1 к атаке",
+        "range": "Ближний",
         "weight": "3 кг"
+      }
+    },
+    {
+      "type": "armor",
+      "data": {
+        "name": "Кольчуга",
+        "description": "Плетёная кольчуга из закалённой стали.",
+        "ac": "16",
+        "resistance": "2",
+        "durability": "5",
+        "weight": "8 кг"
+      }
+    },
+    {
+      "type": "artifact",
+      "data": {
+        "name": "Амулет предков",
+        "description": "Древний амулет с рунами.",
+        "bonus": "+2 к мудрости",
+        "weight": "0.2 кг"
+      }
+    },
+    {
+      "type": "tool",
+      "data": {
+        "name": "Воровские инструменты",
+        "description": "Набор отмычек и напильников.",
+        "bonus": "+1 к взлому",
+        "weight": "0.5 кг"
+      }
+    },
+    {
+      "type": "consumable",
+      "data": {
+        "name": "Зелье здоровья",
+        "type": "зелье",
+        "description": "Восстанавливает 2d4+2 HP.",
+        "effect": "Восполняет здоровье",
+        "rarity": "Обычный",
+        "weight": "0.1 кг"
+      }
+    },
+    {
+      "type": "skill",
+      "data": {
+        "name": "Огненная стрела",
+        "type": "активный",
+        "description": "Запускает стрелу из чистого пламени.",
+        "cooldown": "3 хода",
+        "effect": "Поджигает цель",
+        "damage": "2d6",
+        "check": "Интеллект 12"
       }
     },
     {
       "type": "location",
       "data": {
         "name": "Тёмный лес",
-        "description": "Дремучий лес, полный тайн"
+        "description": "Дремучий лес, полный тайн и опасностей.",
+        "atmosphere": "Холодный туман, запах прелой листвы.",
+        "npcs": ["Леший", "Грибник"],
+        "clues": ["Сломанная ветка", "Старый костёр"],
+        "loot": [
+          { "name": "Серебряная монета", "chance": "50%", "quantity": 3 },
+          { "name": "Зелье", "chance": "30%", "quantity": 1 }
+        ]
+      }
+    },
+    {
+      "type": "story",
+      "data": {
+        "name": "Пропажа оброка",
+        "description": "Основная сюжетная линия.",
+        "summary": "Деревня перестала платить оброк.",
+        "true_cause": "Староста украл оброк и свалил на духов.",
+        "plot": "Герои расследуют и находят улики.",
+        "villain": {
+          "name": "Староста",
+          "motivation": "Жадность",
+          "secrets": ["Спрятал оброк в погребе"]
+        },
+        "endings": {
+          "боевой": "Убить старосту",
+          "мирный": "Арестовать и вернуть оброк"
+        },
+        "moral": "Жадность до добра не доводит"
+      }
+    },
+    {
+      "type": "reward",
+      "data": {
+        "description": "Награды за прохождение кампании.",
+        "paths": [
+          {
+            "name": "Боевой путь",
+            "description": "Убить всех врагов.",
+            "rewards": ["500 опыта", "Меч +1"],
+            "penalties": ["Вражда с духами"]
+          },
+          {
+            "name": "Мирный путь",
+            "description": "Договориться со всеми.",
+            "rewards": ["800 опыта", "Амулет дружбы"],
+            "penalties": []
+          }
+        ]
       }
     }
   ]
 }</code></pre>
-                    <p>Поддерживаемые типы: <code>player, friendly, enemy, weapon, armor, artifact, tool, consumable, skill, location, story, reward</code>.</p>
+                    <p><strong>Все 12 типов:</strong> <code>player, friendly, enemy, weapon, armor, artifact, tool, consumable, skill, location, story, reward</code>.</p>
+                    <p>Чтобы сделать карточку общей для всех игр, добавьте поле <code>"isCommon": true</code> в объект карточки.</p>
                 </div>
 
                 <div class="info-block-card">
