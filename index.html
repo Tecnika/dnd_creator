@@ -146,7 +146,7 @@
 
                 <div class="info-block-card">
                     <h3>📄 Шаблон JSON для ручной загрузки</h3>
-                    <p>Вы можете загрузить карточки через JSON. Примеры для всех типов:</p>
+                    <p>Вы можете загрузить карточки через JSON. Примеры для всех типов (упрощённый режим):</p>
                     <pre><code>{
   "cards": [
     {
@@ -318,7 +318,131 @@
   ]
 }</code></pre>
                     <p><strong>Все 12 типов:</strong> <code>player, friendly, enemy, weapon, armor, artifact, tool, consumable, skill, location, story, reward</code>.</p>
-                    <p>Чтобы сделать карточку общей для всех игр, добавьте поле <code>"isCommon": true</code> в объект карточки.</p>
+                    <p>Чтобы сделать карточку общей для всех игр, добавьте поле <code>"isCommon": true</code>.</p>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>🐉 Шаблон для режима «Полные D&D 5e»</h3>
+                    <p>Если игра создана с полными правилами, карточки поддерживают доп. поля:</p>
+                    <pre><code>// ПЕРСОНАЖ (full D&D 5e):
+{
+  "type": "player",
+  "data": {
+    "name": "Микула",
+    "race": "Человек",
+    "class": "Воин",
+    "subclass": "Мастер оружия",
+    "background": "Кузнец",
+    "alignment": "Хаотичный добрый",
+    "level": 3,
+    "xp": "900",
+    "speed": "30",
+    "hitDice": "d10",
+    "stats": { "strength": 16, "dexterity": 14, "constitution": 15,
+               "intelligence": 10, "wisdom": 12, "charisma": 8 },
+    "health": { "max": 28, "current": 28 },
+    "armor": { "ac": 18 },
+    "saveProficiencies": ["strength", "constitution"],
+    "skillProficiencies": ["athletics", "intimidation", "perception", "survival"],
+    "spellcastingAbility": "",
+    "features": [
+      { "name": "Боевой стиль: Защита", "description": "+1 КБ" },
+      { "name": "Второе дыхание", "description": "1 раз/отдых, 1d10+3 HP" }
+    ]
+  }
+},
+
+// ВРАГ (full D&D 5e):
+{
+  "type": "enemy",
+  "data": {
+    "name": "Молодой дракон",
+    "subtype": "Дракон",
+    "description": "Чешуйчатый дракон с изумрудной чешуёй.",
+    "challengeRating": "6",
+    "xp": "2300",
+    "health": 120,
+    "armor": { "ac": 18 },
+    "resistances": ["огонь"],
+    "immunities": ["яд"],
+    "conditionImmunities": ["очарование"],
+    "senses": "тёмное зрение 120 фт, слепое зрение 30 фт",
+    "languages": "Драконий, Общий",
+    "legendaryActions": 3,
+    "weakness": "холод",
+    "location": "Пещера"
+  }
+}</code></pre>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>🌳 Структура сюжетного древа (storyTree)</h3>
+                    <p>Сюжетное древо хранится в документе игры и создаётся через визуальный редактор. Пример структуры:</p>
+                    <pre><code>{
+  "storyTree": {
+    "nodes": [
+      {
+        "id": "node1",
+        "title": "Прибытие в деревню",
+        "description": "Герои входят в деревню Гнилой оброк.",
+        "type": "start",
+        "x": 400, "y": 50,
+        "cards": ["id_карточки_1", "id_карточки_2"]
+      },
+      {
+        "id": "node2",
+        "title": "Тёмный лес",
+        "description": "Лес, полный духов и загадок.",
+        "type": "encounter",
+        "x": 200, "y": 200,
+        "cards": ["id_карточки_3"]
+      },
+      {
+        "id": "node3",
+        "title": "Болото",
+        "description": "Топкое болото с кикиморами.",
+        "type": "decision",
+        "x": 600, "y": 200,
+        "cards": []
+      },
+      {
+        "id": "node4",
+        "title": "Финал",
+        "description": "Разоблачение старосты.",
+        "type": "ending",
+        "x": 400, "y": 350,
+        "cards": []
+      }
+    ],
+    "edges": [
+      { "from": "node1", "to": "node2", "label": "Пойти в лес" },
+      { "from": "node1", "to": "node3", "label": "Пойти на болото" },
+      { "from": "node2", "to": "node4", "label": "Вернуться" },
+      { "from": "node3", "to": "node4", "label": "Выбраться" }
+    ]
+  }
+}</code></pre>
+                </div>
+
+                <div class="info-block-card">
+                    <h3>📦 Полный экспорт игры (JSON)</h3>
+                    <p>При экспорте игры через кнопку 💾 Экспорт сохраняется полная структура:</p>
+                    <pre><code>{
+  "game": {
+    "name": "Гнилой оброк",
+    "setting": "Древняя Русь",
+    "description": "Детектив в славянском сеттинге."
+  },
+  "rulesMode": "simplified",
+  "storyTree": {
+    "nodes": [ /* … */ ],
+    "edges": [ /* … */ ]
+  },
+  "cards": [
+    { "type": "player", "data": { /* … */ }, "isCommon": false },
+    { "type": "enemy", "data": { /* … */ }, "isCommon": false }
+  ]
+}</code></pre>
                 </div>
 
                 <div class="info-block-card">
