@@ -1,0 +1,747 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #1a1e24;
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    padding: 2rem 1.5rem;
+    color: #eaeef2;
+    font-size: 14pt;
+}
+
+.app {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    margin-bottom: 2.5rem;
+    background: #262c34;
+    padding: 1rem 1.8rem;
+    border-radius: 40px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.toolbar h1 {
+    font-weight: 400;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #f5c27b, #e09d5a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.game-info {
+    font-size: 0.85rem;
+    color: #b0bed0;
+    padding: 0.3rem 1rem;
+    background: #1f262e;
+    border-radius: 30px;
+}
+
+.game-info strong {
+    color: #f5c27b;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.btn {
+    background: #3d4550;
+    border: none;
+    color: #f0f4fa;
+    padding: 0.6rem 1.4rem;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #505a66;
+}
+
+.btn:hover {
+    background: #56606e;
+    transform: scale(1.02);
+    border-color: #b7c4d4;
+}
+
+.btn-primary {
+    background: #b48b5a;
+    border-color: #dbb47a;
+    color: #1e1e1e;
+}
+
+.btn-primary:hover {
+    background: #caa06a;
+}
+
+.btn-success {
+    background: #3d7a5a;
+    border-color: #5a9a7a;
+}
+
+.btn-success:hover {
+    background: #4d8a6a;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #6a7a8a;
+}
+
+.btn-outline:hover {
+    background: #2a3a4a;
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem;
+    background: #1f262e;
+    border-radius: 30px;
+}
+
+.filter-btn {
+    background: #2a333e;
+    border: 1px solid #3a4a5a;
+    color: #b0bed0;
+    padding: 0.3rem 1.2rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: 0.1s;
+}
+
+.filter-btn:hover {
+    background: #3a4a5a;
+}
+
+.filter-btn.active {
+    background: #b48b5a;
+    border-color: #dbb47a;
+    color: #1e1e1e;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.8rem;
+    margin-top: 1.5rem;
+}
+
+.character-card {
+    background: #242b33;
+    border-radius: 28px;
+    padding: 1.4rem 1.4rem 1.2rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    border: 1px solid #3b434e;
+    transition: 0.15s;
+    display: flex;
+    flex-direction: column;
+    font-size: 14pt;
+}
+
+.character-card:hover {
+    border-color: #b68f5c;
+    box-shadow: 0 8px 25px rgba(180, 140, 70, 0.15);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid #3a434f;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.9rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.char-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f5e7d3;
+    letter-spacing: 0.5px;
+}
+
+.char-class {
+    background: #3f4a58;
+    padding: 0.2rem 1rem;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #d4dce8;
+    text-transform: uppercase;
+}
+
+.char-role {
+    background: #4a3f3a;
+    padding: 0.2rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    color: #d4c8b8;
+}
+
+.card-type-badge {
+    background: #2a4a5a;
+    padding: 0.2rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    color: #8ac0d8;
+    border: 1px solid #3a6a7a;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem 0.8rem;
+    background: #1f262e;
+    padding: 0.5rem 0.7rem;
+    border-radius: 18px;
+    margin: 0.5rem 0 0.8rem 0;
+    font-size: 0.85rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dotted #3b4451;
+    padding: 0.1rem 0;
+}
+
+.stat-item span:first-child {
+    color: #b0bed0;
+    font-weight: 300;
+}
+
+.stat-item span:last-child {
+    font-weight: 500;
+    color: #f0e3d0;
+}
+
+.hp-ac {
+    display: flex;
+    gap: 1.2rem;
+    background: #1b2128;
+    padding: 0.3rem 0.8rem;
+    border-radius: 30px;
+    margin: 0.2rem 0 0.6rem 0;
+    font-weight: 500;
+    flex-wrap: wrap;
+}
+
+.hp-ac span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.info-block {
+    margin: 0.3rem 0 0.2rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.info-block strong {
+    color: #ccb690;
+    font-weight: 500;
+    display: inline-block;
+    width: 100%;
+    border-bottom: 1px solid #33404d;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+}
+
+.list-tag {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.list-tag span {
+    background: #303a45;
+    padding: 0.1rem 0.7rem;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    color: #d3deec;
+    border: 1px solid #475260;
+}
+
+.list-tag .item-qty {
+    background: #3a4a3a;
+    border-color: #5a7a5a;
+    color: #b8d8b8;
+}
+
+.goal-item {
+    background: #2a3a3a;
+    border-color: #4a6a5a;
+    color: #c8e0d0;
+    padding: 0.1rem 0.7rem;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    border: 1px solid #4a6a5a;
+}
+
+.card-footer {
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.2rem 1rem;
+    font-size: 0.7rem;
+    border-radius: 30px;
+    background: #3b4350;
+    border: 1px solid #58626f;
+    color: #d3dce8;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.btn-small:hover {
+    background: #4d5869;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 0;
+    color: #7f8a99;
+    font-size: 1.2rem;
+}
+
+.json-input-area {
+    display: none;
+    background: #1a2128;
+    padding: 1rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #3a4a5a;
+}
+
+.json-input-area.active {
+    display: block;
+}
+
+.json-input-area textarea {
+    width: 100%;
+    min-height: 250px;
+    background: #0d1219;
+    color: #d4dee8;
+    border: 1px solid #3a4a5a;
+    border-radius: 12px;
+    padding: 0.8rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    resize: vertical;
+}
+
+.json-input-area .btn-row {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.file-input-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.file-input-wrapper input[type=file] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #2a3a2a;
+    border: 1px solid #5a8a5a;
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    color: #d4e8d4;
+    font-weight: 500;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+    display: none;
+    max-width: 400px;
+    z-index: 1000;
+}
+
+.toast.error {
+    background: #3a2a2a;
+    border-color: #8a5a5a;
+    color: #e8d4d4;
+}
+
+.description-text {
+    background: #1b2128;
+    border-radius: 16px;
+    padding: 0.3rem 0.7rem;
+    margin-top: 4px;
+    font-style: italic;
+    color: #c8d4e0;
+}
+
+.equipment-card {
+    border-left: 6px solid #6a6a8a;
+}
+.consumable-card {
+    border-left: 6px solid #6a8a6a;
+}
+.skill-card {
+    border-left: 6px solid #8a7a5a;
+}
+.npc-enemy-card {
+    border-left: 6px solid #8a4a4a;
+}
+.npc-friendly-card {
+    border-left: 6px solid #4a8a4a;
+}
+.location-card {
+    border-left: 6px solid #4a6a8a;
+}
+.story-card {
+    border-left: 6px solid #8a6a4a;
+}
+.reward-card {
+    border-left: 6px solid #caa06a;
+}
+
+/* ========== ПЕЧАТЬ ========== */
+@media print {
+    body {
+        background: white;
+        padding: 0.15in;
+        margin: 0;
+        color: #111;
+        font-size: 14pt;
+    }
+
+    .toolbar,
+    .btn,
+    .card-footer .btn-small,
+    .no-print,
+    .json-input-area,
+    .filter-bar {
+        display: none !important;
+    }
+
+    .card-grid {
+        display: block !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ===== ПЕРСОНАЖИ, NPC, ЛОКАЦИИ, СЮЖЕТ, НАГРАДЫ — ПО 1 НА СТРАНИЦУ ===== */
+    .character-card.player-card,
+    .character-card.npc-friendly-card,
+    .character-card.npc-enemy-card,
+    .character-card.location-card,
+    .character-card.story-card,
+    .character-card.reward-card {
+        display: block !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        break-after: page !important;
+        border: 1px solid #ccc !important;
+        background: #fcfcfc !important;
+        color: #111 !important;
+        box-shadow: none !important;
+        border-radius: 8px !important;
+        padding: 1rem 1.2rem !important;
+        margin: 0 !important;
+        min-height: 9.5in !important;
+        max-height: 10.5in !important;
+        height: auto !important;
+        width: 100% !important;
+        font-size: 14pt !important;
+        float: none !important;
+        position: static !important;
+    }
+
+    /* ===== ВСЁ ОСТАЛЬНОЕ (оружие, броня, артефакты, инструменты, расходники, навыки) — СЕТКА 2×2 ИЛИ 3×3 ===== */
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) {
+        display: inline-block !important;
+        vertical-align: top !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border: 1px solid #ccc !important;
+        background: #fcfcfc !important;
+        color: #111 !important;
+        box-shadow: none !important;
+        border-radius: 6px !important;
+        padding: 0.3rem 0.4rem !important;
+        margin: 0 !important;
+        width: 32% !important;
+        min-height: 0 !important;
+        max-height: 3.8in !important;
+        overflow: hidden !important;
+        font-size: 11pt !important;
+        line-height: 1.15 !important;
+        float: none !important;
+        position: static !important;
+    }
+
+    /* ===== СТИЛИ ДЛЯ ПОЛНОСТРАНИЧНЫХ КАРТОЧЕК ===== */
+    .character-card.player-card .info-block,
+    .character-card.npc-friendly-card .info-block,
+    .character-card.npc-enemy-card .info-block,
+    .character-card.location-card .info-block,
+    .character-card.story-card .info-block,
+    .character-card.reward-card .info-block {
+        font-size: 14pt !important;
+        line-height: 1.5 !important;
+    }
+    .character-card.player-card .list-tag span,
+    .character-card.npc-friendly-card .list-tag span,
+    .character-card.npc-enemy-card .list-tag span,
+    .character-card.location-card .list-tag span,
+    .character-card.story-card .list-tag span,
+    .character-card.reward-card .list-tag span {
+        font-size: 13pt !important;
+        padding: 0.1rem 0.7rem !important;
+    }
+    .character-card.player-card .stats-grid,
+    .character-card.npc-friendly-card .stats-grid,
+    .character-card.npc-enemy-card .stats-grid,
+    .character-card.location-card .stats-grid,
+    .character-card.story-card .stats-grid,
+    .character-card.reward-card .stats-grid {
+        font-size: 14pt !important;
+        padding: 0.5rem 0.7rem !important;
+    }
+    .character-card.player-card .hp-ac,
+    .character-card.npc-friendly-card .hp-ac,
+    .character-card.npc-enemy-card .hp-ac,
+    .character-card.location-card .hp-ac,
+    .character-card.story-card .hp-ac,
+    .character-card.reward-card .hp-ac {
+        font-size: 14pt !important;
+        padding: 0.3rem 0.8rem !important;
+    }
+    .character-card.player-card .char-name,
+    .character-card.npc-friendly-card .char-name,
+    .character-card.npc-enemy-card .char-name,
+    .character-card.location-card .char-name,
+    .character-card.story-card .char-name,
+    .character-card.reward-card .char-name {
+        font-size: 1.8rem !important;
+    }
+    .character-card.player-card .description-text,
+    .character-card.npc-friendly-card .description-text,
+    .character-card.npc-enemy-card .description-text,
+    .character-card.location-card .description-text,
+    .character-card.story-card .description-text,
+    .character-card.reward-card .description-text {
+        font-size: 13pt !important;
+        padding: 0.3rem 0.7rem !important;
+    }
+    .character-card.player-card .info-block strong,
+    .character-card.npc-friendly-card .info-block strong,
+    .character-card.npc-enemy-card .info-block strong,
+    .character-card.location-card .info-block strong,
+    .character-card.story-card .info-block strong,
+    .character-card.reward-card .info-block strong {
+        font-size: 14pt !important;
+    }
+    .character-card.player-card .char-class,
+    .character-card.npc-friendly-card .char-class,
+    .character-card.npc-enemy-card .char-class,
+    .character-card.location-card .char-class,
+    .character-card.story-card .char-class,
+    .character-card.reward-card .char-class {
+        font-size: 12pt !important;
+        padding: 0.2rem 1rem !important;
+    }
+    .character-card.player-card .char-role,
+    .character-card.npc-friendly-card .char-role,
+    .character-card.npc-enemy-card .char-role,
+    .character-card.location-card .char-role,
+    .character-card.story-card .char-role,
+    .character-card.reward-card .char-role {
+        font-size: 11pt !important;
+        padding: 0.15rem 0.7rem !important;
+    }
+    .character-card.player-card .card-type-badge,
+    .character-card.npc-friendly-card .card-type-badge,
+    .character-card.npc-enemy-card .card-type-badge,
+    .character-card.location-card .card-type-badge,
+    .character-card.story-card .card-type-badge,
+    .character-card.reward-card .card-type-badge {
+        font-size: 11pt !important;
+        padding: 0.15rem 0.7rem !important;
+    }
+    .character-card.player-card .goal-item,
+    .character-card.npc-friendly-card .goal-item,
+    .character-card.npc-enemy-card .goal-item,
+    .character-card.location-card .goal-item,
+    .character-card.story-card .goal-item,
+    .character-card.reward-card .goal-item {
+        font-size: 12pt !important;
+        padding: 0.1rem 0.7rem !important;
+    }
+
+    /* ===== СТИЛИ ДЛЯ КАРТОЧЕК В СЕТКЕ ===== */
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .char-name {
+        font-size: 13pt !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .card-header {
+        padding-bottom: 0.1rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .stats-grid {
+        font-size: 9pt !important;
+        padding: 0.1rem 0.25rem !important;
+        margin: 0.05rem 0 0.1rem 0 !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .hp-ac {
+        font-size: 10pt !important;
+        padding: 0.1rem 0.3rem !important;
+        margin: 0.05rem 0 0.1rem 0 !important;
+        gap: 0.5rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .info-block {
+        font-size: 9pt !important;
+        margin: 0.05rem 0 !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .info-block strong {
+        font-size: 9pt !important;
+        border-bottom-width: 1px !important;
+        padding-bottom: 1px !important;
+        margin-bottom: 1px !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .list-tag {
+        gap: 0.08rem 0.2rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .list-tag span {
+        font-size: 8pt !important;
+        padding: 0.04rem 0.25rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .description-text {
+        font-size: 9pt !important;
+        padding: 0.08rem 0.2rem !important;
+        border-radius: 8px !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .card-footer {
+        display: none !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .char-class,
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .card-type-badge {
+        font-size: 8pt !important;
+        padding: 0.04rem 0.25rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .char-role {
+        font-size: 8pt !important;
+        padding: 0.04rem 0.25rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .goal-item {
+        font-size: 8pt !important;
+        padding: 0.04rem 0.25rem !important;
+    }
+    .character-card:not(.player-card):not(.npc-friendly-card):not(.npc-enemy-card):not(.location-card):not(.story-card):not(.reward-card) .stats-grid .stat-item {
+        padding: 0.03rem 0 !important;
+    }
+
+    /* Общие стили для печати */
+    .char-name {
+        color: #1e1e1e !important;
+    }
+    .char-class {
+        background: #ddd !important;
+        color: #111 !important;
+    }
+    .stats-grid {
+        background: #f0f0f0 !important;
+    }
+    .stat-item span:first-child {
+        color: #333 !important;
+    }
+    .stat-item span:last-child {
+        color: #000 !important;
+    }
+    .hp-ac {
+        background: #eaeaea !important;
+    }
+    .list-tag span {
+        background: #e0e0e0 !important;
+        color: #111 !important;
+        border-color: #999 !important;
+    }
+    .info-block strong {
+        color: #7a5d3a !important;
+    }
+    .description-text {
+        background: #f0f0f0 !important;
+        color: #111 !important;
+    }
+    .goal-item {
+        background: #e0e8e0 !important;
+        border-color: #999 !important;
+        color: #111 !important;
+    }
+    .card-type-badge {
+        background: #d0d8e0 !important;
+        color: #111 !important;
+        border-color: #999 !important;
+    }
+    .char-role {
+        background: #d0c8b0 !important;
+        color: #111 !important;
+    }
+    .npc-enemy-card {
+        border-left-color: #8a4a4a !important;
+    }
+    .npc-friendly-card {
+        border-left-color: #4a8a4a !important;
+    }
+    .location-card {
+        border-left-color: #4a6a8a !important;
+    }
+    .story-card {
+        border-left-color: #8a6a4a !important;
+    }
+    .reward-card {
+        border-left-color: #caa06a !important;
+    }
+    .equipment-card {
+        border-left-color: #6a6a8a !important;
+    }
+    .consumable-card {
+        border-left-color: #6a8a6a !important;
+    }
+    .skill-card {
+        border-left-color: #8a7a5a !important;
+    }
+}

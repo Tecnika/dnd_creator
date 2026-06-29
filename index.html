@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Карточки · Гнилой оброк</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="toolbar">
+            <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                <h1>⚔️ Гнилой оброк</h1>
+                <span class="game-info" id="gameInfo">🏔️ <strong>Сеттинг:</strong> Древняя Русь</span>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" id="exportBtn">💾 Экспорт JSON</button>
+                <button class="btn btn-outline" id="importBtn">📂 Импорт JSON</button>
+                <button class="btn" id="printBtn">🖨️ Печать</button>
+            </div>
+        </div>
+
+        <div class="json-input-area" id="jsonInputArea">
+            <textarea id="jsonTextarea" placeholder="Вставьте JSON данные игры..."></textarea>
+            <div class="btn-row">
+                <button class="btn btn-success" id="applyJsonBtn">✅ Применить</button>
+                <button class="btn btn-outline" id="cancelJsonBtn">❌ Отмена</button>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-outline">📁 Загрузить файл</button>
+                    <input type="file" id="fileInput" accept=".json">
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-btn active" data-filter="all">📋 Все</button>
+            <button class="filter-btn" data-filter="player">🧙 Игроки</button>
+            <button class="filter-btn" data-filter="friendly">🤝 Друзья</button>
+            <button class="filter-btn" data-filter="enemy">👹 Враги</button>
+            <button class="filter-btn" data-filter="weapon">⚔️ Оружие</button>
+            <button class="filter-btn" data-filter="armor">🛡️ Броня</button>
+            <button class="filter-btn" data-filter="artifact">🔮 Артефакты</button>
+            <button class="filter-btn" data-filter="tool">🔧 Инструменты</button>
+            <button class="filter-btn" data-filter="consumable">🧪 Расходники</button>
+            <button class="filter-btn" data-filter="skill">🎯 Навыки</button>
+            <button class="filter-btn" data-filter="location">🗺️ Локации</button>
+            <button class="filter-btn" data-filter="story">📖 Сюжет</button>
+            <button class="filter-btn" data-filter="reward">🏆 Награды</button>
+        </div>
+
+        <div id="cardContainer" class="card-grid">
+            <!-- карточки рендерятся здесь -->
+        </div>
+
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
