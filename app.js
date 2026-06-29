@@ -1410,6 +1410,7 @@
         }
         selectedNodeId = null;
         $('treeNodeEditor').style.display = 'none';
+        fitTreeView();
         renderTree();
     }
 
@@ -1420,13 +1421,48 @@
         }).catch(err => showToast('❌ Ошибка сохранения древа: ' + err.message, true));
     }
 
+    // ---- Tree viewport state ----
+    let treeViewX = 0, treeViewY = 0, treeZoom = 1.0;
+    let panning = false, panStartX = 0, panStartY = 0, panStartVX = 0, panStartVY = 0;
+
+    function getTreeViewBox() {
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        const w = wrapper.clientWidth || 800;
+        const h = wrapper.clientHeight || 500;
+        const vw = w / treeZoom;
+        const vh = h / treeZoom;
+        return { x: treeViewX, y: treeViewY, w: vw, h: vh, cw: w, ch: h };
+    }
+
+    function fitTreeView() {
+        if (!treeNodes.length) { treeViewX = 0;
+            treeViewY = 0;
+            treeZoom = 1; return; }
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        treeNodes.forEach(n => {
+            if (n.x < minX) minX = n.x;
+            if (n.y < minY) minY = n.y;
+            if (n.x > maxX) maxX = n.x;
+            if (n.y > maxY) maxY = n.y;
+        });
+        const pad = 80;
+        minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+        const wrapper = document.getElementById('treeCanvasWrapper');
+        const cw = wrapper.clientWidth || 800;
+        const ch = wrapper.clientHeight || 500;
+        const zw = cw / (maxX - minX);
+        const zh = ch / (maxY - minY);
+        treeZoom = Math.min(zw, zh, 2);
+        treeViewX = minX;
+        treeViewY = minY;
+    }
+
     function renderTree() {
         const svg = document.getElementById('treeSvg');
         const wrapper = document.getElementById('treeCanvasWrapper');
         if (!svg) return;
-        const w = wrapper.clientWidth || 800;
-        const h = 500;
-        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        const vb = getTreeViewBox();
+        svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
         svg.innerHTML = '';
 
         // Draw edges
@@ -1434,37 +1470,54 @@
             const from = treeNodes.find(n => n.id === edge.from);
             const to = treeNodes.find(n => n.id === edge.to);
             if (!from || !to) return;
+
+            // Line from node center to edge of target node
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 1) return;
+            const nx = dx / dist, ny = dy / dist;
+            const nodeR = 28;
+            const sx = from.x + nx * nodeR;
+            const sy = from.y + ny * nodeR;
+            const ex = to.x - nx * nodeR;
+            const ey = to.y - ny * nodeR;
+
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
-            line.setAttribute('x2', to.x); line.setAttribute('y2', to.y);
-            line.setAttribute('stroke', '#4a6a8a');
-            line.setAttribute('stroke-width', '2');
-            line.setAttribute('stroke-dasharray', '5,3');
+            line.setAttribute('x1', sx); line.setAttribute('y1', sy);
+            line.setAttribute('x2', ex); line.setAttribute('y2', ey);
+            line.setAttribute('stroke', '#5a8aaa');
+            line.setAttribute('stroke-width', '2.5');
             svg.appendChild(line);
 
-            // Arrow head
-            const angle = Math.atan2(to.y - from.y, to.x - from.x);
-            const ax = to.x - 15 * Math.cos(angle);
-            const ay = to.y - 15 * Math.sin(angle);
+            // Arrow head at target edge
+            const angle = Math.atan2(ey - sy, ex - sx);
+            const aLen = 14, aAngle = 0.45;
+            const ax1 = ex - aLen * Math.cos(angle - aAngle);
+            const ay1 = ey - aLen * Math.sin(angle - aAngle);
+            const ax2 = ex - aLen * Math.cos(angle + aAngle);
+            const ay2 = ey - aLen * Math.sin(angle + aAngle);
             const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            const a1x = ax + 8 * Math.cos(angle - 2.5);
-            const a1y = ay + 8 * Math.sin(angle - 2.5);
-            const a2x = ax + 8 * Math.cos(angle + 2.5);
-            const a2y = ay + 8 * Math.sin(angle + 2.5);
-            arrow.setAttribute('points', `${to.x},${to.y} ${a1x},${a1y} ${a2x},${a2y}`);
-            arrow.setAttribute('fill', '#4a6a8a');
+            arrow.setAttribute('points', `${ex},${ey} ${ax1},${ay1} ${ax2},${ay2}`);
+            arrow.setAttribute('fill', '#5a8aaa');
             svg.appendChild(arrow);
 
-            // Label
+            // Label at midpoint
             if (edge.label) {
-                const midX = (from.x + to.x) / 2;
-                const midY = (from.y + to.y) / 2 - 10;
+                const midX = (sx + ex) / 2;
+                const midY = (sy + ey) / 2 - 12;
+                const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bg.setAttribute('x', midX - 50); bg.setAttribute('y', midY - 8);
+                bg.setAttribute('width', '100'); bg.setAttribute('height', '16');
+                bg.setAttribute('rx', '4');
+                bg.setAttribute('fill', 'rgba(22,28,36,0.8)');
+                svg.appendChild(bg);
                 const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', midX); txt.setAttribute('y', midY);
+                txt.setAttribute('x', midX); txt.setAttribute('y', midY + 3);
                 txt.setAttribute('text-anchor', 'middle');
                 txt.setAttribute('fill', '#8ac0d8');
-                txt.setAttribute('font-size', '11');
-                txt.textContent = edge.label;
+                txt.setAttribute('font-size', '10');
+                txt.textContent = edge.label.length > 20 ? edge.label.slice(0, 19) + '…' : edge.label;
                 svg.appendChild(txt);
             }
         });
@@ -1477,31 +1530,41 @@
             const isSelected = node.id === selectedNodeId;
 
             const nodeW = 140, nodeH = 50;
-            const rx = 12;
+            const rx = 14;
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rect.setAttribute('x', node.x - nodeW / 2);
             rect.setAttribute('y', node.y - nodeH / 2);
             rect.setAttribute('width', nodeW);
             rect.setAttribute('height', nodeH);
             rect.setAttribute('rx', rx);
-            const typeColors = { start: '#4a8a4a', encounter: '#8a4a4a', decision: '#8a7a4a', loot: '#4a6a8a', ending: '#8a4a8a' };
+            const typeColors = { start: '#2a6a2a', encounter: '#8a3a3a', decision: '#8a7a2a', loot: '#2a5a7a', ending: '#7a3a7a' };
             rect.setAttribute('fill', typeColors[node.type] || '#2a3a4a');
             rect.setAttribute('stroke', isSelected ? '#f5c27b' : '#4a6a8a');
             rect.setAttribute('stroke-width', isSelected ? '3' : '1.5');
             g.appendChild(rect);
 
-            // Title text
+            // Shadow
+            const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            shadow.setAttribute('x', node.x - nodeW / 2 + 3);
+            shadow.setAttribute('y', node.y - nodeH / 2 + 3);
+            shadow.setAttribute('width', nodeW);
+            shadow.setAttribute('height', nodeH);
+            shadow.setAttribute('rx', rx);
+            shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
+            g.insertBefore(shadow, rect);
+
+            // Title
             const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             title.setAttribute('x', node.x);
             title.setAttribute('y', node.y - 5);
             title.setAttribute('text-anchor', 'middle');
             title.setAttribute('fill', '#fff');
-            title.setAttribute('font-size', '12');
+            title.setAttribute('font-size', '11');
             title.setAttribute('font-weight', '600');
-            title.textContent = node.title.length > 18 ? node.title.slice(0, 17) + '…' : node.title;
+            title.textContent = node.title.length > 16 ? node.title.slice(0, 15) + '…' : node.title;
             g.appendChild(title);
 
-            // Card count
+            // Card count badge
             const nCards = (node.cards || []).length;
             if (nCards > 0) {
                 const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -1509,7 +1572,7 @@
                 badge.setAttribute('y', node.y + 14);
                 badge.setAttribute('text-anchor', 'middle');
                 badge.setAttribute('fill', '#b48b5a');
-                badge.setAttribute('font-size', '10');
+                badge.setAttribute('font-size', '9');
                 badge.textContent = `📎 ${nCards}`;
                 g.appendChild(badge);
             }
@@ -1517,15 +1580,17 @@
             // Drag events
             g.addEventListener('mousedown', e => {
                 e.preventDefault();
-                const rect = wrapper.getBoundingClientRect();
-                const scaleX = w / rect.width;
+                e.stopPropagation();
+                const vb = getTreeViewBox();
+                const scaleX = vb.w / vb.cw;
+                const scaleY = vb.h / vb.ch;
                 dragNodeId = node.id;
-                dragOffsetX = (e.clientX - rect.left) * scaleX - node.x;
-                dragOffsetY = (e.clientY - rect.top) * scaleY - node.y;
+                const rect = wrapper.getBoundingClientRect();
+                dragOffsetX = (e.clientX - rect.left) * scaleX + vb.x - node.x;
+                dragOffsetY = (e.clientY - rect.top) * scaleY + vb.y - node.y;
                 g.style.cursor = 'grabbing';
             });
 
-            // Click to select/edit
             g.addEventListener('click', e => {
                 e.stopPropagation();
                 selectTreeNode(node.id);
@@ -1534,35 +1599,83 @@
             svg.appendChild(g);
         });
 
-        // Background click to deselect
+        // Background pan
+        svg.addEventListener('mousedown', e => {
+            if (e.target === svg) {
+                panning = true;
+                const vb = getTreeViewBox();
+                const rect = wrapper.getBoundingClientRect();
+                const scaleX = vb.w / rect.width;
+                const scaleY = vb.h / rect.height;
+                panStartX = e.clientX;
+                panStartY = e.clientY;
+                panStartVX = vb.x;
+                panStartVY = vb.y;
+                svg.style.cursor = 'grabbing';
+            }
+        });
         svg.addEventListener('click', () => {
             selectedNodeId = null;
             $('treeNodeEditor').style.display = 'none';
             renderTree();
         });
+        svg.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const vb = getTreeViewBox();
+            const mx = (e.clientX - wrapper.getBoundingClientRect().left) / vb.cw;
+            const my = (e.clientY - wrapper.getBoundingClientRect().top) / vb.ch;
+            const worldX = vb.x + mx * vb.w;
+            const worldY = vb.y + my * vb.h;
+            const newZoom = Math.max(0.15, Math.min(5, treeZoom * delta));
+            const newVw = vb.cw / newZoom;
+            const newVh = vb.ch / newZoom;
+            treeViewX = worldX - mx * newVw;
+            treeViewY = worldY - my * newVh;
+            treeZoom = newZoom;
+            renderTree();
+        }, { passive: false });
     }
 
-    // SVG drag handling
-    let scaleY = 1;
-    document.addEventListener('mousemove', e => {
-        if (!dragNodeId) return;
-        const wrapper = document.getElementById('treeCanvasWrapper');
+    function updatePan(e) {
+        if (!panning) return;
+        const vb = getTreeViewBox();
+        const rect = document.getElementById('treeCanvasWrapper').getBoundingClientRect();
+        const scaleX = vb.w / rect.width;
+        const scaleY = vb.h / rect.height;
+        treeViewX = panStartVX - (e.clientX - panStartX) * scaleX;
+        treeViewY = panStartVY - (e.clientY - panStartY) * scaleY;
+        renderTree();
+    }
+
+    function stopPan() {
+        panning = false;
         const svg = document.getElementById('treeSvg');
-        const rect = wrapper.getBoundingClientRect();
-        const w = wrapper.clientWidth || 800;
-        const h = 500;
-        scaleY = h / rect.height;
-        const scaleX = w / rect.width;
-        const node = treeNodes.find(n => n.id === dragNodeId);
-        if (node) {
-            node.x = Math.round((e.clientX - rect.left) * scaleX - dragOffsetX);
-            node.y = Math.round((e.clientY - rect.top) * scaleY - dragOffsetY);
-            renderTree();
+        if (svg) svg.style.cursor = '';
+    }
+
+    // Drag and pan on document level
+    document.addEventListener('mousemove', e => {
+        if (dragNodeId) {
+            const wrapper = document.getElementById('treeCanvasWrapper');
+            const vb = getTreeViewBox();
+            const rect = wrapper.getBoundingClientRect();
+            const scaleX = vb.w / rect.width;
+            const scaleY = vb.h / rect.height;
+            const node = treeNodes.find(n => n.id === dragNodeId);
+            if (node) {
+                node.x = Math.round((e.clientX - rect.left) * scaleX + vb.x - dragOffsetX);
+                node.y = Math.round((e.clientY - rect.top) * scaleY + vb.y - dragOffsetY);
+                renderTree();
+            }
+        } else {
+            updatePan(e);
         }
     });
     document.addEventListener('mouseup', () => {
         if (dragNodeId) { dragNodeId = null;
             saveTree(); }
+        stopPan();
     });
 
     function selectTreeNode(nodeId) {
@@ -1655,9 +1768,12 @@
     });
 
     // ---- Auto layout ----
+    $('treeFitBtn').addEventListener('click', () => {
+        fitTreeView();
+        renderTree();
+    });
+
     $('treeAutoBtn').addEventListener('click', () => {
-        const wrapper = document.getElementById('treeCanvasWrapper');
-        const w = wrapper.clientWidth || 800;
         const levels = [];
         const visited = new Set();
         function traverse(id, depth) {
@@ -1667,28 +1783,28 @@
             levels[depth].push(id);
             treeEdges.filter(e => e.from === id).forEach(e => traverse(e.to, depth + 1));
         }
-        // Find root(s) - nodes with no incoming edges
         const hasIncoming = new Set(treeEdges.map(e => e.to));
         treeNodes.forEach(n => {
             if (!hasIncoming.has(n.id)) traverse(n.id, 0);
         });
-        // Place unvisited
         treeNodes.forEach(n => {
             if (!visited.has(n.id)) {
                 if (!levels[0]) levels[0] = [];
                 levels[0].push(n.id);
             }
         });
-        const startY = 50, gapY = 90, gapX = 160;
+        // Wider spacing for large trees
+        const startY = 60, gapY = 120, gapX = 200;
         levels.forEach((ids, li) => {
             const totalW = ids.length * gapX;
-            const startX = (w - totalW) / 2 + gapX / 2;
+            const startX = totalW > gapX ? 100 : 400;
             ids.forEach((id, i) => {
                 const node = treeNodes.find(n => n.id === id);
                 if (node) { node.x = startX + i * gapX;
                     node.y = startY + li * gapY; }
             });
         });
+        fitTreeView();
         renderTree();
         saveTree();
         showToast('✅ Авторасстановка завершена');
