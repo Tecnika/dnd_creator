@@ -275,11 +275,11 @@
         grid.innerHTML = allGames.map(g => `
             <div class="game-card" data-id="${g.id}">
                 <div class="game-card-header">
-                    <span class="game-card-name">${g.name || 'Без названия'}</span>
+                    <span class="game-card-name">${esc(g.name || 'Без названия')}</span>
                     <span class="game-card-date">${formatDate(g.createdAt)}</span>
                 </div>
-                ${g.setting ? `<div class="game-card-setting">🏔️ ${g.setting}</div>` : ''}
-                ${g.description ? `<div class="game-card-desc">${g.description}</div>` : ''}
+                ${g.setting ? `<div class="game-card-setting">🏔️ ${esc(g.setting)}</div>` : ''}
+                ${g.description ? `<div class="game-card-desc">${esc(g.description)}</div>` : ''}
                 <div class="game-card-footer">
                     <button class="btn-small" data-action="open-game" data-id="${g.id}">📂 Открыть</button>
                     <button class="btn-small" data-action="delete-game" data-id="${g.id}">🗑️</button>
@@ -354,11 +354,11 @@
     function renderGameView() {
         if (!currentGame) return;
         const mode = currentGame.rulesMode || 'simplified';
-        $('gameTitle').innerHTML = `🎮 ${currentGame.name || 'Без названия'} <span class="rules-badge">${getRulesLabel(mode)}</span>`;
-        $('sidebarGameName').innerHTML = `${currentGame.name || '—'} <span class="rules-badge" style="font-size:0.7rem;">${mode === 'full' ? '🐉' : '📋'}</span>`;
+        $('gameTitle').innerHTML = `🎮 ${esc(currentGame.name || 'Без названия')} <span class="rules-badge">${getRulesLabel(mode)}</span>`;
+        $('sidebarGameName').innerHTML = `${esc(currentGame.name || '—')} <span class="rules-badge" style="font-size:0.7rem;">${mode === 'full' ? '🐉' : '📋'}</span>`;
         $('sidebarGameSetting').textContent = currentGame.setting ? `🏔️ ${currentGame.setting}` : '';
         $('sidebarGameDesc').textContent = currentGame.description || '';
-        gameInfo.innerHTML = `🏔️ <strong>${currentGame.name || 'Игра'}</strong>${currentGame.setting ? ' · ' + currentGame.setting : ''} · ${getRulesLabel(mode)}`;
+            gameInfo.innerHTML = `🏔️ <strong>${esc(currentGame.name || 'Игра')}</strong>${currentGame.setting ? ' · ' + esc(currentGame.setting) : ''} · ${getRulesLabel(mode)}`;
         currentFilter = 'all';
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
@@ -487,23 +487,23 @@
                 <div class="dnd-section">
                     <strong>🔮 Заклинания</strong>
                     <div class="dnd-stat-row"><span>КД закл: ${spellDC}</span><span>Атака: +${spellAtk}</span><span>Способность: ${STAT_LABELS[spellAbility]}</span></div>
-                    ${Object.keys(slots).length ? `<div class="dnd-stat-row"><span>Ячейки:</span>${Object.entries(slots).filter(([k,v]) => v).map(([k,v]) => `<span>${k} ур: ${v}</span>`).join('')}</div>` : ''}
-                    ${spells.length ? `<div class="list-tag">${spells.map(s => `<span>${s.name||s}${s.level ? ' ['+s.level+']' : ''}${s.prepared ? ' ✓' : ''}</span>`).join('')}</div>` : ''}
+            ${Object.keys(slots).length ? `<div class="dnd-stat-row"><span>Ячейки:</span>${Object.entries(slots).filter(([k,v]) => v).map(([k,v]) => `<span>${esc(k)} ур: ${esc(v)}</span>`).join('')}</div>` : ''}
+            ${spells.length ? `<div class="list-tag">${spells.map(s => `<span>${esc(s.name||s)}${s.level ? ' ['+esc(s.level)+']' : ''}${s.prepared ? ' ✓' : ''}</span>`).join('')}</div>` : ''}
                 </div>`;
         }
 
         return `
-            <div class="dnd-banner">⚡ Уровень ${level} · Б.М. +${prof} · ${race ? race + ' ' : ''}${cls ? cls + (subclass ? ' ('+subclass+')' : '') : ''}</div>
-            ${background ? `<div class="dnd-stat-row"><span>📖 Предыстория: ${background}</span>${alignment ? `<span>⚖️ ${alignment}</span>` : ''}${xp ? `<span>📊 ${xp} XP</span>` : ''}</div>` : ''}
+            <div class="dnd-banner">⚡ Уровень ${level} · Б.М. +${prof} · ${esc(race)}${race ? ' ' : ''}${cls ? esc(cls) + (subclass ? ' ('+esc(subclass)+')' : '') : ''}</div>
+            ${background ? `<div class="dnd-stat-row"><span>📖 Предыстория: ${esc(background)}</span>${alignment ? `<span>⚖️ ${esc(alignment)}</span>` : ''}${xp ? `<span>📊 ${esc(xp)} XP</span>` : ''}</div>` : ''}
             <div class="dnd-section"><strong>🛡️ Спасброски</strong><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin:0.3rem 0;">${sHtml}</div></div>
             <div class="dnd-section"><strong>🎯 Навыки</strong><div class="skills-grid">${skillsHtml}</div></div>
             <div class="dnd-stat-row">
-                <span>❤️ HP ${data.health?.current || '—'}/${data.health?.max || '—'}</span>
-                <span>🛡️ КБ ${data.armor?.ac || '—'}</span>
-                <span>🏃‍♂️ Скорость ${data.speed || '30'} фт</span>
-                <span>🎲 Кости HP: ${data.hitDice || '—'}</span>
+                <span>❤️ HP ${esc(data.health?.current) || '—'}/${esc(data.health?.max) || '—'}</span>
+                <span>🛡️ КБ ${esc(data.armor?.ac) || '—'}</span>
+                <span>🏃‍♂️ Скорость ${esc(data.speed) || '30'} фт</span>
+                <span>🎲 Кости HP: ${esc(data.hitDice) || '—'}</span>
             </div>
-            ${data.features?.length ? `<div class="dnd-section"><strong>⚔️ Особенности</strong><div class="list-tag">${data.features.map(f => `<span title="${f.description||''}">${f.name||f}</span>`).join('')}</div></div>` : ''}
+            ${data.features?.length ? `<div class="dnd-section"><strong>⚔️ Особенности</strong><div class="list-tag">${data.features.map(f => `<span title="${esc(f.description||'')}">${esc(f.name||f)}</span>`).join('')}</div></div>` : ''}
             ${spellsHtml}
         `;
     }
@@ -514,13 +514,13 @@
         const cr = data.challengeRating || '';
         const xp = data.xp || '';
         return `
-            ${cr ? `<div class="dnd-banner">⚠️ CR ${cr}${xp ? ' · ' + xp + ' XP' : ''}</div>` : ''}
-            ${data.resistances?.length ? `<div class="dnd-stat-row"><span>🔰 Сопротивления: ${data.resistances.join(', ')}</span></div>` : ''}
-            ${data.immunities?.length ? `<div class="dnd-stat-row"><span>🛡️ Иммунитеты: ${data.immunities.join(', ')}</span></div>` : ''}
-            ${data.conditionImmunities?.length ? `<div class="dnd-stat-row"><span>🧊 Недейств. эффекты: ${data.conditionImmunities.join(', ')}</span></div>` : ''}
-            ${data.senses ? `<div class="dnd-stat-row"><span>👁️ Чувства: ${data.senses}</span></div>` : ''}
-            ${data.languages ? `<div class="dnd-stat-row"><span>🗣️ Языки: ${data.languages}</span></div>` : ''}
-            ${data.legendaryActions ? `<div class="dnd-stat-row"><span>👑 Легендарные действия (${data.legendaryActions}/ход)</span></div>` : ''}
+            ${cr ? `<div class="dnd-banner">⚠️ ${esc(cr)}${xp ? ' · ' + esc(xp) + ' XP' : ''}</div>` : ''}
+            ${data.resistances?.length ? `<div class="dnd-stat-row"><span>🔰 Сопротивления: ${esc(data.resistances.join(', '))}</span></div>` : ''}
+            ${data.immunities?.length ? `<div class="dnd-stat-row"><span>🛡️ Иммунитеты: ${esc(data.immunities.join(', '))}</span></div>` : ''}
+            ${data.conditionImmunities?.length ? `<div class="dnd-stat-row"><span>🧊 Недейств. эффекты: ${esc(data.conditionImmunities.join(', '))}</span></div>` : ''}
+            ${data.senses ? `<div class="dnd-stat-row"><span>👁️ Чувства: ${esc(data.senses)}</span></div>` : ''}
+            ${data.languages ? `<div class="dnd-stat-row"><span>🗣️ Языки: ${esc(data.languages)}</span></div>` : ''}
+            ${data.legendaryActions ? `<div class="dnd-stat-row"><span>👑 Легендарные действия (${esc(data.legendaryActions)}/ход)</span></div>` : ''}
         `;
     }
 
@@ -554,7 +554,7 @@
             return;
         }
         list.innerHTML = currentCommonCards.map(c =>
-            `<span class="common-card-pill">${getCardTypeLabel(c.type)}: ${c.data?.name || c.name || '—'}</span>`
+            `<span class="common-card-pill">${getCardTypeLabel(c.type)}: ${esc(c.data?.name || c.name || '—')}</span>`
         ).join('');
     }
 
@@ -599,7 +599,7 @@
                 body = buildRewardCardBody(data);
                 break;
             default:
-                body = `<div class="info-block">${data.description || '—'}</div>`;
+                body = `<div class="info-block">${esc(data.description || '—')}</div>`;
         }
 
         const typeLabels = {
@@ -613,7 +613,7 @@
         return `
             <div class="character-card ${cardClass}">
                 <div class="card-header">
-                    <span class="char-name">${data.name || card.name || '—'} ${isCommon}</span>
+                    <span class="char-name">${esc(data.name || card.name || '—')} ${isCommon}</span>
                     <span class="card-type-badge">${getCardTypeLabel(type)}</span>
                 </div>
                 ${body}
@@ -639,15 +639,15 @@
         const sKeys = ['strength', 'agility', 'endurance', 'intelligence', 'wisdom', 'charisma'];
         let sHtml = sKeys.map(k => `<div class="stat-item"><span>${statMap[k]}</span><span>${s[k] ?? '—'}</span></div>`).join('');
         return `
-            ${d.profession ? `<div style="display:flex;gap:0.5rem;margin-bottom:0.3rem;"><span class="char-class">${d.profession}</span>${d.role ? `<span class="char-role">${d.role}</span>` : ''}<span style="font-size:0.7rem;color:#8899aa;">Lv.${d.level || '—'}</span></div>` : ''}
-            <div class="hp-ac"><span>❤️ <strong>${h.current}</strong> / ${h.max} HP</span><span>🛡️ <strong>${a.ac}</strong> AC · ${a.type}</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
+            ${d.profession ? `<div style="display:flex;gap:0.5rem;margin-bottom:0.3rem;"><span class="char-class">${esc(d.profession)}</span>${d.role ? `<span class="char-role">${esc(d.role)}</span>` : ''}<span style="font-size:0.7rem;color:#8899aa;">Lv.${d.level || '—'}</span></div>` : ''}
+            <div class="hp-ac"><span>❤️ <strong>${h.current}</strong> / ${h.max} HP</span><span>🛡️ <strong>${a.ac}</strong> AC · ${esc(a.type)}</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
             <div class="stats-grid">${sHtml}</div>
-            ${d.backstory ? `<div class="info-block"><strong>📜 Предыстория</strong><div class="description-text">${d.backstory}</div></div>` : ''}
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${eq.length ? `<div class="info-block"><strong>⚒️ Снаряжение</strong><div class="list-tag">${eq.map(e => `<span>${e.name||e}</span>`).join('')}</div></div>` : ''}
-            ${con.length ? `<div class="info-block"><strong>🧪 Расходники</strong><div class="list-tag">${con.map(c => `<span class="item-qty">${c.name||c} ${c.quantity ? '×'+c.quantity : ''}</span>`).join('')}</div></div>` : ''}
-            ${sk.length ? `<div class="info-block"><strong>🎯 Навыки</strong><div class="list-tag">${sk.map(s => `<span>${s.name||s}</span>`).join('')}</div></div>` : ''}
-            ${goals.length ? `<div class="info-block"><strong>🎯 Цели</strong><div class="list-tag">${goals.map(g => `<span class="goal-item">🎯 ${g}</span>`).join('')}</div></div>` : ''}
+            ${d.backstory ? `<div class="info-block"><strong>📜 Предыстория</strong><div class="description-text">${esc(d.backstory)}</div></div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${eq.length ? `<div class="info-block"><strong>⚒️ Снаряжение</strong><div class="list-tag">${eq.map(e => `<span>${esc(e.name||e)}</span>`).join('')}</div></div>` : ''}
+            ${con.length ? `<div class="info-block"><strong>🧪 Расходники</strong><div class="list-tag">${con.map(c => `<span class="item-qty">${esc(c.name||c)} ${c.quantity ? '×'+esc(c.quantity) : ''}</span>`).join('')}</div></div>` : ''}
+            ${sk.length ? `<div class="info-block"><strong>🎯 Навыки</strong><div class="list-tag">${sk.map(s => `<span>${esc(s.name||s)}</span>`).join('')}</div></div>` : ''}
+            ${goals.length ? `<div class="info-block"><strong>🎯 Цели</strong><div class="list-tag">${goals.map(g => `<span class="goal-item">🎯 ${esc(g)}</span>`).join('')}</div></div>` : ''}
         `;
     }
 
@@ -657,13 +657,13 @@
         const sk = d.skills || [];
         const diag = d.dialogue || {};
         return `
-            <div class="hp-ac"><span>❤️ <strong>${d.health || '—'}</strong> HP</span><span>🛡️ <strong>${a.ac}</strong> AC</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
-            ${Object.keys(s).length ? `<div class="stats-grid">${Object.entries(s).map(([k,v]) => `<div class="stat-item"><span>${k}</span><span>${v}</span></div>`).join('')}</div>` : ''}
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${d.motivation ? `<div class="info-block"><strong>🎯 Мотивация</strong><div class="description-text">${d.motivation}</div></div>` : ''}
-            ${d.secrets?.length ? `<div class="info-block"><strong>🔍 Тайны</strong><div class="list-tag">${d.secrets.map(s => `<span>🔎 ${s}</span>`).join('')}</div></div>` : ''}
-            ${sk.length ? `<div class="info-block"><strong>⚔️ Навыки</strong><div class="list-tag">${sk.map(s => `<span>${s.name||s}</span>`).join('')}</div></div>` : ''}
-            ${Object.keys(diag).length ? `<div class="info-block"><strong>💬 Диалоги</strong><div class="list-tag">${Object.entries(diag).map(([k,v]) => `<span>${k}: ${v}</span>`).join('')}</div></div>` : ''}
+            <div class="hp-ac"><span>❤️ <strong>${esc(d.health || '—')}</strong> HP</span><span>🛡️ <strong>${a.ac}</strong> AC</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
+            ${Object.keys(s).length ? `<div class="stats-grid">${Object.entries(s).map(([k,v]) => `<div class="stat-item"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('')}</div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${d.motivation ? `<div class="info-block"><strong>🎯 Мотивация</strong><div class="description-text">${esc(d.motivation)}</div></div>` : ''}
+            ${d.secrets?.length ? `<div class="info-block"><strong>🔍 Тайны</strong><div class="list-tag">${d.secrets.map(s => `<span>🔎 ${esc(s)}</span>`).join('')}</div></div>` : ''}
+            ${sk.length ? `<div class="info-block"><strong>⚔️ Навыки</strong><div class="list-tag">${sk.map(s => `<span>${esc(s.name||s)}</span>`).join('')}</div></div>` : ''}
+            ${Object.keys(diag).length ? `<div class="info-block"><strong>💬 Диалоги</strong><div class="list-tag">${Object.entries(diag).map(([k,v]) => `<span>${esc(k)}: ${esc(v)}</span>`).join('')}</div></div>` : ''}
         `;
     }
 
@@ -673,47 +673,47 @@
         const sk = d.skills || [];
         const extra = fullMode ? buildDndEnemyExtra(d) : '';
         return `
-            ${d.subtype ? `<div style="font-size:0.8rem;color:#8899aa;margin-bottom:0.3rem;">${d.subtype}</div>` : ''}
+            ${d.subtype ? `<div style="font-size:0.8rem;color:#8899aa;margin-bottom:0.3rem;">${esc(d.subtype)}</div>` : ''}
             ${extra}
-            <div class="hp-ac"><span>❤️ <strong>${d.health || '—'}</strong> HP</span><span>🛡️ <strong>${a.ac}</strong> AC</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
-            ${Object.keys(s).length ? `<div class="stats-grid">${Object.entries(s).map(([k,v]) => `<div class="stat-item"><span>${k}</span><span>${v}</span></div>`).join('')}</div>` : ''}
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${sk.length ? `<div class="info-block"><strong>⚔️ Навыки</strong><div class="list-tag">${sk.map(s => `<span>${s.name||s}${s.damage ? ' ('+s.damage+')' : ''}</span>`).join('')}</div></div>` : ''}
-            ${d.weakness ? `<div class="info-block"><strong>⚠️ Слабость</strong><div class="list-tag"><span>${d.weakness}</span></div></div>` : ''}
-            ${d.location ? `<div class="info-block"><strong>📍 Локация</strong><div class="description-text">${d.location}</div></div>` : ''}
-            ${d.dialogue ? `<div class="info-block"><strong>💬 Диалоги</strong><div class="list-tag">${Object.entries(d.dialogue).map(([k,v]) => `<span>${k}: ${v}</span>`).join('')}</div></div>` : ''}
+            <div class="hp-ac"><span>❤️ <strong>${esc(d.health || '—')}</strong> HP</span><span>🛡️ <strong>${a.ac}</strong> AC</span><span>Сопр. ${a.resistance} · Прочн. ${a.durability}</span></div>
+            ${Object.keys(s).length ? `<div class="stats-grid">${Object.entries(s).map(([k,v]) => `<div class="stat-item"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('')}</div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${sk.length ? `<div class="info-block"><strong>⚔️ Навыки</strong><div class="list-tag">${sk.map(s => `<span>${esc(s.name||s)}${s.damage ? ' ('+esc(s.damage)+')' : ''}</span>`).join('')}</div></div>` : ''}
+            ${d.weakness ? `<div class="info-block"><strong>⚠️ Слабость</strong><div class="list-tag"><span>${esc(d.weakness)}</span></div></div>` : ''}
+            ${d.location ? `<div class="info-block"><strong>📍 Локация</strong><div class="description-text">${esc(d.location)}</div></div>` : ''}
+            ${d.dialogue ? `<div class="info-block"><strong>💬 Диалоги</strong><div class="list-tag">${Object.entries(d.dialogue).map(([k,v]) => `<span>${esc(k)}: ${esc(v)}</span>`).join('')}</div></div>` : ''}
         `;
     }
 
     function buildEquipmentCardBody(d, type) {
         const tL = { weapon: '⚔️ оружие', armor: '🛡️ броня', artifact: '🔮 артефакт', tool: '🔧 инструмент' };
         let extra = '';
-        if (type === 'weapon') extra = `${d.damage ? `<span><strong>Урон:</strong> ${d.damage}</span>` : ''}${d.bonus ? `<span><strong>Бонус:</strong> ${d.bonus}</span>` : ''}${d.range ? `<span><strong>Дальность:</strong> ${d.range}</span>` : ''}`;
-        else if (type === 'armor') extra = `${d.ac ? `<span><strong>КБ:</strong> ${d.ac}</span>` : ''}${d.resistance ? `<span><strong>Сопр.:</strong> ${d.resistance}</span>` : ''}${d.durability ? `<span><strong>Прочн.:</strong> ${d.durability}</span>` : ''}`;
-        else extra = `${d.bonus ? `<span><strong>Бонус:</strong> ${d.bonus}</span>` : ''}`;
+        if (type === 'weapon') extra = `${d.damage ? `<span><strong>Урон:</strong> ${esc(d.damage)}</span>` : ''}${d.bonus ? `<span><strong>Бонус:</strong> ${esc(d.bonus)}</span>` : ''}${d.range ? `<span><strong>Дальность:</strong> ${esc(d.range)}</span>` : ''}`;
+        else if (type === 'armor') extra = `${d.ac ? `<span><strong>КБ:</strong> ${esc(d.ac)}</span>` : ''}${d.resistance ? `<span><strong>Сопр.:</strong> ${esc(d.resistance)}</span>` : ''}${d.durability ? `<span><strong>Прочн.:</strong> ${esc(d.durability)}</span>` : ''}`;
+        else extra = `${d.bonus ? `<span><strong>Бонус:</strong> ${esc(d.bonus)}</span>` : ''}`;
         return `
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${extra ? `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.3rem 0;font-size:0.85rem;background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;">${extra}${d.weight ? `<span><strong>Вес:</strong> ${d.weight}</span>` : ''}</div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${extra ? `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.3rem 0;font-size:0.85rem;background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;">${extra}${d.weight ? `<span><strong>Вес:</strong> ${esc(d.weight)}</span>` : ''}</div>` : ''}
         `;
     }
 
     function buildConsumableCardBody(d) {
         return `
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.3rem 0;font-size:0.85rem;background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;">
-                ${d.effect ? `<span><strong>Эффект:</strong> ${d.effect}</span>` : ''}
-                ${d.rarity ? `<span><strong>Редкость:</strong> ${d.rarity}</span>` : ''}
-                ${d.weight ? `<span><strong>Вес:</strong> ${d.weight}</span>` : ''}
+                ${d.effect ? `<span><strong>Эффект:</strong> ${esc(d.effect)}</span>` : ''}
+                ${d.rarity ? `<span><strong>Редкость:</strong> ${esc(d.rarity)}</span>` : ''}
+                ${d.weight ? `<span><strong>Вес:</strong> ${esc(d.weight)}</span>` : ''}
             </div>
         `;
     }
 
     function buildSkillCardBody(d) {
         return `
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${d.effect ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Эффект:</strong> ${d.effect}</div>` : ''}
-            ${d.damage ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Урон:</strong> ${d.damage}</div>` : ''}
-            ${d.check ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Проверка:</strong> ${d.check}</div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${d.effect ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Эффект:</strong> ${esc(d.effect)}</div>` : ''}
+            ${d.damage ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Урон:</strong> ${esc(d.damage)}</div>` : ''}
+            ${d.check ? `<div style="background:#1f262e;padding:0.3rem 0.7rem;border-radius:16px;margin-top:0.3rem;font-size:0.85rem;"><strong>Проверка:</strong> ${esc(d.check)}</div>` : ''}
         `;
     }
 
@@ -722,11 +722,11 @@
         const npcs = d.npcs || [];
         const loot = d.loot || [];
         return `
-            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${d.description || '—'}</div></div>
-            ${d.atmosphere ? `<div class="info-block"><strong>🌫️ Атмосфера</strong><div class="description-text">${d.atmosphere}</div></div>` : ''}
-            ${npcs.length ? `<div class="info-block"><strong>👥 NPC</strong><div class="list-tag">${npcs.map(n => `<span>${n}</span>`).join('')}</div></div>` : ''}
-            ${clues.length ? `<div class="info-block"><strong>🔍 Улики</strong><div class="list-tag">${clues.map(c => `<span>🔎 ${c}</span>`).join('')}</div></div>` : ''}
-            ${loot.length ? `<div class="info-block"><strong>🎁 Лут</strong><div class="list-tag">${loot.map(l => `<span>${l.name} ${l.chance ? '('+l.chance+')' : ''}${l.quantity ? ' ×'+l.quantity : ''}</span>`).join('')}</div></div>` : ''}
+            <div class="info-block"><strong>📖 Описание</strong><div class="description-text">${esc(d.description || '—')}</div></div>
+            ${d.atmosphere ? `<div class="info-block"><strong>🌫️ Атмосфера</strong><div class="description-text">${esc(d.atmosphere)}</div></div>` : ''}
+            ${npcs.length ? `<div class="info-block"><strong>👥 NPC</strong><div class="list-tag">${npcs.map(n => `<span>${esc(n)}</span>`).join('')}</div></div>` : ''}
+            ${clues.length ? `<div class="info-block"><strong>🔍 Улики</strong><div class="list-tag">${clues.map(c => `<span>🔎 ${esc(c)}</span>`).join('')}</div></div>` : ''}
+            ${loot.length ? `<div class="info-block"><strong>🎁 Лут</strong><div class="list-tag">${loot.map(l => `<span>${esc(l.name)} ${l.chance ? '('+esc(l.chance)+')' : ''}${l.quantity ? ' ×'+esc(l.quantity) : ''}</span>`).join('')}</div></div>` : ''}
         `;
     }
 
@@ -734,11 +734,11 @@
         const v = d.villain || {};
         const endings = d.endings || {};
         return `
-            <div class="info-block"><strong>📜 Сводка</strong><div class="description-text">${d.summary || d.plot || '—'}</div></div>
-            <div class="info-block"><strong>🕵️ Истинная причина</strong><div class="description-text">${d.true_cause || '—'}</div></div>
-            <div class="info-block"><strong>👤 Злодей</strong><div style="background:#1f262e;border-radius:16px;padding:0.3rem 0.7rem;margin-top:4px;"><div><strong>Имя:</strong> ${v.name || '—'}</div><div><strong>Мотивация:</strong> ${v.motivation || '—'}</div>${v.secrets?.length ? `<div><strong>Тайны:</strong> ${v.secrets.join(', ')}</div>` : ''}</div></div>
-            <div class="info-block"><strong>🏁 Концовки</strong><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:4px;">${Object.entries(endings).map(([k,v]) => `<span style="background:#2a3a3a;padding:0.2rem 0.7rem;border-radius:30px;font-size:0.8rem;border:1px solid #4a6a5a;">${k}: ${v}</span>`).join('')}</div></div>
-            ${d.moral ? `<div class="info-block"><strong>💡 Мораль</strong><div class="description-text">${d.moral}</div></div>` : ''}
+            <div class="info-block"><strong>📜 Сводка</strong><div class="description-text">${esc(d.summary || d.plot || '—')}</div></div>
+            <div class="info-block"><strong>🕵️ Истинная причина</strong><div class="description-text">${esc(d.true_cause || '—')}</div></div>
+            <div class="info-block"><strong>👤 Злодей</strong><div style="background:#1f262e;border-radius:16px;padding:0.3rem 0.7rem;margin-top:4px;"><div><strong>Имя:</strong> ${esc(v.name || '—')}</div><div><strong>Мотивация:</strong> ${esc(v.motivation || '—')}</div>${v.secrets?.length ? `<div><strong>Тайны:</strong> ${esc(v.secrets.join(', '))}</div>` : ''}</div></div>
+            <div class="info-block"><strong>🏁 Концовки</strong><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:4px;">${Object.entries(endings).map(([k,v]) => `<span style="background:#2a3a3a;padding:0.2rem 0.7rem;border-radius:30px;font-size:0.8rem;border:1px solid #4a6a5a;">${esc(k)}: ${esc(v)}</span>`).join('')}</div></div>
+            ${d.moral ? `<div class="info-block"><strong>💡 Мораль</strong><div class="description-text">${esc(d.moral)}</div></div>` : ''}
         `;
     }
 
@@ -746,7 +746,7 @@
         const paths = d.paths || [];
         let h = '';
         paths.forEach(p => {
-            h += `<div class="info-block" style="margin-top:0.5rem;background:#1f262e;border-radius:16px;padding:0.5rem 0.7rem;"><strong>${p.name || 'Путь'}</strong><div class="description-text">${p.description || '—'}</div>${p.rewards?.length ? `<div><strong>✅ Награды:</strong> ${p.rewards.join(', ')}</div>` : ''}${p.penalties?.length ? `<div><strong>❌ Штрафы:</strong> ${p.penalties.join(', ')}</div>` : ''}</div>`;
+            h += `<div class="info-block" style="margin-top:0.5rem;background:#1f262e;border-radius:16px;padding:0.5rem 0.7rem;"><strong>${esc(p.name || 'Путь')}</strong><div class="description-text">${esc(p.description || '—')}</div>${p.rewards?.length ? `<div><strong>✅ Награды:</strong> ${esc(p.rewards.join(', '))}</div>` : ''}${p.penalties?.length ? `<div><strong>❌ Штрафы:</strong> ${esc(p.penalties.join(', '))}</div>` : ''}</div>`;
         });
         return h || '<div class="info-block">Нет данных о наградах</div>';
     }
@@ -973,7 +973,7 @@
         el.innerHTML = html;
     }
 
-    function esc(s) { return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
     function formatArraySimple(arr) {
         return Array.isArray(arr) ? arr.join(', ') : '';
@@ -1691,7 +1691,7 @@
         const cardsDiv = $('treeNodeCards');
         const assigned = (node.cards || []).map(cid => currentCards.find(c => c.id === cid) || currentCommonCards.find(c => c.id === cid)).filter(Boolean);
         cardsDiv.innerHTML = assigned.length ? assigned.map(c =>
-            `<span class="tree-card-pill">${getCardTypeLabel(c.type)}: ${c.data?.name || c.name || '—'} <span class="tree-remove-card" data-card-id="${c.id}">✕</span></span>`
+            `<span class="tree-card-pill">${getCardTypeLabel(c.type)}: ${esc(c.data?.name || c.name || '—')} <span class="tree-remove-card" data-card-id="${c.id}">✕</span></span>`
         ).join('') : '<span style="opacity:0.5;font-size:0.85rem;">Нет привязанных карточек</span>';
         cardsDiv.querySelectorAll('.tree-remove-card').forEach(el => {
             el.addEventListener('click', () => {
@@ -1706,7 +1706,7 @@
         const outgoing = treeEdges.filter(e => e.from === nodeId);
         edgesDiv.innerHTML = outgoing.length ? outgoing.map(e => {
             const target = treeNodes.find(n => n.id === e.to);
-            return `<span class="tree-edge-pill">→ ${target ? target.title : e.to} ${e.label ? '«' + e.label + '»' : ''} <span class="tree-remove-edge" data-edge-from="${e.from}" data-edge-to="${e.to}">✕</span></span>`;
+            return `<span class="tree-edge-pill">→ ${esc(target ? target.title : e.to)} ${e.label ? '«' + esc(e.label) + '»' : ''} <span class="tree-remove-edge" data-edge-from="${e.from}" data-edge-to="${e.to}">✕</span></span>`;
         }).join('') : '<span style="opacity:0.5;font-size:0.85rem;">Нет связей</span>';
         edgesDiv.querySelectorAll('.tree-remove-edge').forEach(el => {
             el.addEventListener('click', () => {
@@ -1818,7 +1818,7 @@
         $('edgeFromLabel').textContent = fromNode ? fromNode.title : selectedNodeId;
         const select = $('edgeToSelect');
         select.innerHTML = treeNodes.filter(n => n.id !== selectedNodeId).map(n =>
-            `<option value="${n.id}">${n.title}</option>`
+            `<option value="${n.id}">${esc(n.title)}</option>`
         ).join('');
         $('edgeLabel').value = '';
         $('treeEdgeModal').style.display = 'flex';
@@ -1848,7 +1848,7 @@
         const list = $('treeCardSelectList');
         list.innerHTML = allCards.filter(c => !assigned.has(c.id)).map(c =>
             `<div class="tree-card-option" data-card-id="${c.id}">
-                <span>${getCardTypeLabel(c.type)}: ${c.data?.name || c.name || '—'}</span>
+                <span>${getCardTypeLabel(c.type)}: ${esc(c.data?.name || c.name || '—')}</span>
                 <button class="btn-small">➕</button>
             </div>`
         ).join('') || '<p style="opacity:0.6;">Все карточки уже привязаны</p>';
