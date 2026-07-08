@@ -2,3 +2,4 @@
 *.log
 firebase-config.js
 test_*.json
+json4.json
